@@ -49,6 +49,202 @@ Assignment1/
 
 ---
 
+## Table Schemas
+
+### Member
+```sql
+CREATE TABLE Member (
+    MemberID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    ContactNumber VARCHAR(15) NOT NULL,
+    Age INT NOT NULL CHECK (Age >= 16 AND Age <= 100),
+    Image VARCHAR(255) DEFAULT 'default_avatar.jpg',
+    CollegeID VARCHAR(20) NOT NULL UNIQUE,
+    Role ENUM('Student', 'Faculty', 'Staff', 'Admin') NOT NULL DEFAULT 'Student',
+    Department VARCHAR(50) NOT NULL,
+    IsVerified BOOLEAN NOT NULL DEFAULT FALSE,
+    JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LastLogin DATETIME,
+    Bio TEXT,
+    CONSTRAINT chk_email_format CHECK (Email LIKE '%@%.%')
+);
+```
+
+### Follow
+```sql
+CREATE TABLE Follow (
+    FollowID INT PRIMARY KEY AUTO_INCREMENT,
+    FollowerID INT NOT NULL,
+    FollowingID INT NOT NULL,
+    FollowDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE(FollowerID, FollowingID),
+    CONSTRAINT chk_no_self_follow CHECK (FollowerID != FollowingID)
+);
+```
+
+### Post
+```sql
+CREATE TABLE Post (
+    PostID INT PRIMARY KEY AUTO_INCREMENT,
+    MemberID INT NOT NULL,
+    Content TEXT NOT NULL,
+    MediaURL VARCHAR(255),
+    MediaType ENUM('Image', 'Video', 'Document', 'None') NOT NULL DEFAULT 'None',
+    PostDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LastEditDate DATETIME,
+    Visibility ENUM('Public', 'Followers', 'Private') NOT NULL DEFAULT 'Public',
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
+    CommentCount INT NOT NULL DEFAULT 0 CHECK (CommentCount >= 0),
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_content_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
+);
+```
+
+### Comment
+```sql
+CREATE TABLE Comment (
+    CommentID INT PRIMARY KEY AUTO_INCREMENT,
+    PostID INT NOT NULL,
+    MemberID INT NOT NULL,
+    Content TEXT NOT NULL,
+    CommentDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LastEditDate DATETIME,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_comment_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
+);
+```
+
+### Like
+```sql
+CREATE TABLE `Like` (
+    LikeID INT PRIMARY KEY AUTO_INCREMENT,
+    MemberID INT NOT NULL,
+    TargetType ENUM('Post', 'Comment') NOT NULL,
+    TargetID INT NOT NULL,
+    LikeDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE(MemberID, TargetType, TargetID)
+);
+```
+
+### Report
+```sql
+CREATE TABLE Report (
+    ReportID INT PRIMARY KEY AUTO_INCREMENT,
+    ReporterID INT NOT NULL,
+    ReportedItemType ENUM('Post', 'Comment', 'Member') NOT NULL,
+    ReportedItemID INT NOT NULL,
+    Reason TEXT NOT NULL,
+    Status ENUM('Pending', 'Reviewed', 'Resolved', 'Dismissed') NOT NULL DEFAULT 'Pending',
+    ReportDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ReviewedBy INT,
+    ReviewDate DATETIME,
+    Action VARCHAR(255),
+    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT chk_reason_not_empty CHECK (CHAR_LENGTH(TRIM(Reason)) > 0),
+    CONSTRAINT chk_review_logic CHECK (
+        (Status = 'Pending' AND ReviewedBy IS NULL) OR
+        (Status != 'Pending' AND ReviewedBy IS NOT NULL)
+    )
+);
+```
+
+### Group
+```sql
+CREATE TABLE `Group` (
+    GroupID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Description TEXT NOT NULL,
+    CreatorID INT NOT NULL,
+    CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    Category ENUM('Academic', 'Sports', 'Cultural', 'Tech', 'Other') NOT NULL DEFAULT 'Other',
+    MemberCount INT NOT NULL DEFAULT 0 CHECK (MemberCount >= 0),
+    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_name_not_empty CHECK (CHAR_LENGTH(TRIM(Name)) > 0)
+);
+```
+
+### GroupMember
+```sql
+CREATE TABLE GroupMember (
+    GroupMemberID INT PRIMARY KEY AUTO_INCREMENT,
+    GroupID INT NOT NULL,
+    MemberID INT NOT NULL,
+    Role ENUM('Admin', 'Moderator', 'Member') NOT NULL DEFAULT 'Member',
+    JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE(GroupID, MemberID)
+);
+```
+
+### Message
+```sql
+CREATE TABLE Message (
+    MessageID INT PRIMARY KEY AUTO_INCREMENT,
+    SenderID INT NOT NULL,
+    ReceiverID INT NOT NULL,
+    Content TEXT NOT NULL,
+    SendDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
+    ReadDate DATETIME,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_message_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
+    CONSTRAINT chk_no_self_message CHECK (SenderID != ReceiverID),
+    CONSTRAINT chk_read_date_logic CHECK (
+        (IsRead = FALSE AND ReadDate IS NULL) OR
+        (IsRead = TRUE AND ReadDate IS NOT NULL)
+    )
+);
+```
+
+### Notification
+```sql
+CREATE TABLE Notification (
+    NotificationID INT PRIMARY KEY AUTO_INCREMENT,
+    MemberID INT NOT NULL,
+    Type ENUM('Like', 'Comment', 'Follow', 'Mention', 'GroupInvite', 'Report') NOT NULL,
+    Content TEXT NOT NULL,
+    ReferenceID INT,
+    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
+    CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ReadDate DATETIME,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
+    CONSTRAINT chk_notification_read_date_logic CHECK (
+        (IsRead = FALSE AND ReadDate IS NULL) OR
+        (IsRead = TRUE AND ReadDate IS NOT NULL)
+    )
+);
+```
+
+### ActivityLog
+```sql
+CREATE TABLE ActivityLog (
+    LogID INT PRIMARY KEY AUTO_INCREMENT,
+    MemberID INT NOT NULL,
+    ActivityType ENUM('Login', 'Logout', 'Post', 'Comment', 'Like', 'Report', 'ProfileUpdate') NOT NULL,
+    Details TEXT NOT NULL,
+    IPAddress VARCHAR(45),
+    `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+---
+
 ## Core Functionalities (5+ required)
 
 ### 1. User Registration & Verification
