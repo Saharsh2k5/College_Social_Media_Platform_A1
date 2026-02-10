@@ -68,8 +68,8 @@ CREATE TABLE Follow (
     FollowerID INT NOT NULL,
     FollowingID INT NOT NULL,
     FollowDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(FollowerID, FollowingID),
     CONSTRAINT chk_no_self_follow CHECK (FollowerID != FollowingID)
 );
@@ -90,7 +90,7 @@ CREATE TABLE Post (
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
     CommentCount INT NOT NULL DEFAULT 0 CHECK (CommentCount >= 0),
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_content_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
 );
 
@@ -107,8 +107,8 @@ CREATE TABLE Comment (
     LastEditDate DATETIME,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_comment_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
 );
 
@@ -122,7 +122,7 @@ CREATE TABLE `Like` (
     TargetType ENUM('Post', 'Comment') NOT NULL,
     TargetID INT NOT NULL,
     LikeDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(MemberID, TargetType, TargetID)
 );
 
@@ -141,8 +141,8 @@ CREATE TABLE Report (
     ReviewedBy INT,
     ReviewDate DATETIME,
     Action VARCHAR(255),
-    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL,
+    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_reason_not_empty CHECK (CHAR_LENGTH(TRIM(Reason)) > 0),
     CONSTRAINT chk_review_logic CHECK (
         (Status = 'Pending' AND ReviewedBy IS NULL) OR
@@ -163,7 +163,7 @@ CREATE TABLE `Group` (
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     Category ENUM('Academic', 'Sports', 'Cultural', 'Tech', 'Other') NOT NULL DEFAULT 'Other',
     MemberCount INT NOT NULL DEFAULT 0 CHECK (MemberCount >= 0),
-    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_name_not_empty CHECK (CHAR_LENGTH(TRIM(Name)) > 0)
 );
 
@@ -178,8 +178,8 @@ CREATE TABLE GroupMember (
     Role ENUM('Admin', 'Moderator', 'Member') NOT NULL DEFAULT 'Member',
     JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(GroupID, MemberID)
 );
 
@@ -196,8 +196,8 @@ CREATE TABLE Message (
     IsRead BOOLEAN NOT NULL DEFAULT FALSE,
     ReadDate DATETIME,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_message_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
     CONSTRAINT chk_no_self_message CHECK (SenderID != ReceiverID),
     CONSTRAINT chk_read_date_logic CHECK (
@@ -219,8 +219,12 @@ CREATE TABLE Notification (
     IsRead BOOLEAN NOT NULL DEFAULT FALSE,
     CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ReadDate DATETIME,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
+    CONSTRAINT chk_notification_read_date_logic CHECK (
+        (IsRead = FALSE AND ReadDate IS NULL) OR
+        (IsRead = TRUE AND ReadDate IS NOT NULL)
+    )
 );
 
 -- ============================================================================
@@ -233,15 +237,13 @@ CREATE TABLE ActivityLog (
     ActivityType ENUM('Login', 'Logout', 'Post', 'Comment', 'Like', 'Report', 'ProfileUpdate') NOT NULL,
     Details TEXT NOT NULL,
     IPAddress VARCHAR(45),
-    Timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE
+    `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ============================================================================
 -- Indexes for Performance Optimization
 -- ============================================================================
-CREATE INDEX idx_member_email ON Member(Email);
-CREATE INDEX idx_member_collegeid ON Member(CollegeID);
 CREATE INDEX idx_member_role ON Member(Role);
 CREATE INDEX idx_post_member ON Post(MemberID);
 CREATE INDEX idx_post_date ON Post(PostDate DESC);
@@ -254,7 +256,7 @@ CREATE INDEX idx_report_status ON Report(Status);
 CREATE INDEX idx_message_receiver ON Message(ReceiverID);
 CREATE INDEX idx_notification_member ON Notification(MemberID);
 CREATE INDEX idx_activitylog_member ON ActivityLog(MemberID);
-CREATE INDEX idx_activitylog_timestamp ON ActivityLog(Timestamp DESC);
+CREATE INDEX idx_activitylog_timestamp ON ActivityLog(`Timestamp` DESC);
 
 -- ============================================================================
 -- SAMPLE DATA INSERTION
@@ -289,30 +291,31 @@ INSERT INTO Follow (FollowerID, FollowingID) VALUES
 (2, 1), (2, 6), (2, 9),
 (4, 1), (4, 5), (4, 11),
 (6, 1), (6, 10), (6, 13),
-(10, 1), (10, 6);
+(10, 1), (10, 6),
+(3, 1), (5, 2), (7, 4), (8, 1), (12, 6);
 
 -- Insert Sample Data into Post Table (20 rows)
 INSERT INTO Post (MemberID, Content, MediaURL, MediaType, Visibility, LikeCount, CommentCount) VALUES
-(1, 'Just finished my database assignment! Really enjoyed designing the schema for our college social media platform. 🎓', 'post1.jpg', 'Image', 'Public', 15, 3),
-(2, 'Excited to share that our robotics team qualified for the national competition! Hard work pays off! 🤖', 'robot.jpg', 'Image', 'Public', 28, 5),
-(3, 'Reminder: Database Systems midterm exam on February 15th. Office hours this Friday 2-4 PM.', NULL, 'None', 'Public', 45, 8),
-(4, 'Our Formula Student car testing went amazingly well today! Can''t wait for the competition season.', 'car_test.mp4', 'Video', 'Public', 32, 7),
-(5, 'Published my research paper on catalytic reactions! Link in bio. Thank you to all my lab mates! 📚', 'paper.pdf', 'Document', 'Public', 21, 4),
-(6, 'Working on a new web application using React and Node.js. Open source project coming soon! 💻', 'webapp.jpg', 'Image', 'Public', 19, 6),
-(7, 'Won the inter-college debate competition! Topic: AI Ethics and Regulation. Great experience!', 'debate.jpg', 'Image', 'Public', 26, 4),
-(8, 'New course announcement: Advanced Topics in Applied Mathematics - Spring 2026. Registration open!', NULL, 'None', 'Public', 38, 12),
-(9, 'Built an IoT-based smart irrigation system for our campus garden. Sustainability matters! 🌱', 'iot.jpg', 'Image', 'Public', 24, 5),
-(10, 'Won first place at the National Hackathon with my ML-based healthcare prediction model! 🏆', 'hackathon.jpg', 'Image', 'Public', 42, 9),
-(11, 'CAD model of our new mechanical project. 3D printing starts tomorrow!', 'cad.jpg', 'Image', 'Followers', 17, 3),
-(1, 'Anyone interested in forming a study group for algorithms? DM me!', NULL, 'None', 'Public', 12, 8),
-(13, 'Participated in my first CTF competition. Cybersecurity is fascinating!', NULL, 'None', 'Public', 18, 2),
-(14, 'Campus sustainability initiative: Join us for tree plantation this Sunday!', 'trees.jpg', 'Image', 'Public', 31, 11),
-(6, 'Just deployed my portfolio website. Check it out and give feedback! Link in bio.', NULL, 'None', 'Public', 22, 6),
-(16, 'Placement season tips: Start preparing early, practice DSA daily, and network effectively!', NULL, 'None', 'Public', 36, 14),
-(4, 'Engineering is not just about calculations, it''s about creativity and problem solving! 💡', NULL, 'None', 'Public', 29, 5),
-(10, 'Research paper accepted at ICML 2026! Dreams do come true with hard work! 🎉', 'acceptance.jpg', 'Image', 'Public', 51, 15),
-(20, 'Learning Python for data science. Any good resource recommendations?', NULL, 'None', 'Public', 14, 9),
-(2, 'Circuit design workshop this Saturday in EE lab. All departments welcome!', 'circuit.jpg', 'Image', 'Public', 20, 4);
+(1, 'Just finished my database assignment! Really enjoyed designing the schema for our college social media platform. 🎓', 'post1.jpg', 'Image', 'Public', 3, 3),
+(2, 'Excited to share that our robotics team qualified for the national competition! Hard work pays off! 🤖', 'robot.jpg', 'Image', 'Public', 2, 2),
+(3, 'Reminder: Database Systems midterm exam on February 15th. Office hours this Friday 2-4 PM.', NULL, 'None', 'Public', 1, 3),
+(4, 'Our Formula Student car testing went amazingly well today! Can''t wait for the competition season.', 'car_test.mp4', 'Video', 'Public', 1, 2),
+(5, 'Published my research paper on catalytic reactions! Link in bio. Thank you to all my lab mates! 📚', 'paper.pdf', 'Document', 'Public', 1, 1),
+(6, 'Working on a new web application using React and Node.js. Open source project coming soon! 💻', 'webapp.jpg', 'Image', 'Public', 2, 2),
+(7, 'Won the inter-college debate competition! Topic: AI Ethics and Regulation. Great experience!', 'debate.jpg', 'Image', 'Public', 0, 1),
+(8, 'New course announcement: Advanced Topics in Applied Mathematics - Spring 2026. Registration open!', NULL, 'None', 'Public', 1, 2),
+(9, 'Built an IoT-based smart irrigation system for our campus garden. Sustainability matters! 🌱', 'iot.jpg', 'Image', 'Public', 0, 0),
+(10, 'Won first place at the National Hackathon with my ML-based healthcare prediction model! 🏆', 'hackathon.jpg', 'Image', 'Public', 3, 3),
+(11, 'CAD model of our new mechanical project. 3D printing starts tomorrow!', 'cad.jpg', 'Image', 'Followers', 0, 0),
+(1, 'Anyone interested in forming a study group for algorithms? DM me!', NULL, 'None', 'Public', 0, 0),
+(13, 'Participated in my first CTF competition. Cybersecurity is fascinating!', NULL, 'None', 'Public', 0, 0),
+(14, 'Campus sustainability initiative: Join us for tree plantation this Sunday!', 'trees.jpg', 'Image', 'Public', 0, 0),
+(6, 'Just deployed my portfolio website. Check it out and give feedback! Link in bio.', NULL, 'None', 'Public', 0, 0),
+(16, 'Placement season tips: Start preparing early, practice DSA daily, and network effectively!', NULL, 'None', 'Public', 1, 0),
+(4, 'Engineering is not just about calculations, it''s about creativity and problem solving! 💡', NULL, 'None', 'Public', 0, 0),
+(10, 'Research paper accepted at ICML 2026! Dreams do come true with hard work! 🎉', 'acceptance.jpg', 'Image', 'Public', 0, 1),
+(20, 'Learning Python for data science. Any good resource recommendations?', NULL, 'None', 'Public', 0, 0),
+(2, 'Circuit design workshop this Saturday in EE lab. All departments welcome!', 'circuit.jpg', 'Image', 'Public', 0, 0);
 
 -- Insert Sample Data into Comment Table (20 rows)
 INSERT INTO Comment (PostID, MemberID, Content, LikeCount) VALUES
@@ -360,7 +363,10 @@ INSERT INTO Report (ReporterID, ReportedItemType, ReportedItemID, Reason, Status
 (6, 'Comment', 15, 'Off-topic spam comments', 'Resolved', 8, '2026-02-04 08:20:00', 'Comment removed'),
 (1, 'Post', 11, 'Sensitive personal information shared', 'Resolved', 3, '2026-02-04 10:00:00', 'Post edited'),
 (10, 'Comment', 19, 'Hate speech and discrimination', 'Pending', NULL, NULL, NULL),
-(16, 'Member', 20, 'Impersonating faculty member', 'Reviewed', 3, '2026-02-04 12:15:00', 'Profile verification required');
+(16, 'Member', 20, 'Impersonating faculty member', 'Reviewed', 3, '2026-02-04 12:15:00', 'Profile verification required'),
+(11, 'Post', 3, 'Duplicate announcement content', 'Dismissed', 3, '2026-02-05 12:00:00', 'No issue found'),
+(12, 'Comment', 5, 'Uncivil tone in discussion', 'Resolved', 8, '2026-02-05 13:30:00', 'Comment removed'),
+(15, 'Post', 2, 'Suspicious links in post', 'Pending', NULL, NULL, NULL);
 
 -- Insert Sample Data into Group Table (15 rows)
 INSERT INTO `Group` (Name, Description, CreatorID, Category, MemberCount) VALUES
@@ -405,7 +411,12 @@ INSERT INTO Message (SenderID, ReceiverID, Content, IsRead, ReadDate) VALUES
 (16, 1, 'Need any help with placement preparation? I can share some resources.', FALSE, NULL),
 (7, 5, 'Great research paper! Can I cite it in my presentation?', TRUE, '2026-02-04 11:25:00'),
 (9, 2, 'Want to collaborate on an IoT project for the smart campus?', FALSE, NULL),
-(20, 10, 'I''m new to ML. Can you suggest some beginner-friendly projects?', FALSE, NULL);
+(20, 10, 'I''m new to ML. Can you suggest some beginner-friendly projects?', FALSE, NULL),
+(2, 6, 'Are you joining the ML study group this week?', FALSE, NULL),
+(5, 1, 'Can you review my draft before submission?', FALSE, NULL),
+(3, 10, 'Please share the rubric for Assignment 1.', TRUE, '2026-02-05 10:00:00'),
+(8, 4, 'Math Circle meeting tomorrow at 5 PM in the seminar room.', TRUE, '2026-02-05 17:15:00'),
+(11, 4, 'Great CAD model! Can you send the STL file?', FALSE, NULL);
 
 -- Insert Sample Data into Notification Table (20 rows)
 INSERT INTO Notification (MemberID, Type, Content, ReferenceID, IsRead, ReadDate) VALUES
@@ -431,7 +442,7 @@ INSERT INTO Notification (MemberID, Type, Content, ReferenceID, IsRead, ReadDate
 (20, 'Comment', 'Students shared Python learning resources', 19, FALSE, NULL);
 
 -- Insert Sample Data into ActivityLog Table (20 rows)
-INSERT INTO ActivityLog (MemberID, ActivityType, Details, IPAddress, Timestamp) VALUES
+INSERT INTO ActivityLog (MemberID, ActivityType, Details, IPAddress, `Timestamp`) VALUES
 (1, 'Login', 'User logged in successfully', '192.168.1.101', '2026-02-01 08:00:00'),
 (1, 'Post', 'Created new post about database assignment', '192.168.1.101', '2026-02-01 09:00:00'),
 (2, 'Login', 'User logged in successfully', '192.168.1.102', '2026-02-01 08:30:00'),

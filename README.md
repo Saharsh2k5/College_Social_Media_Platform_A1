@@ -2,14 +2,13 @@
 ## CS 432 - Databases (Course Project/Assignment 1)
 ## IIT Gandhinagar - February 4, 2026
 
----
 
-## 📋 Project Overview
+## Project Overview
 
 **Domain**: College Social Media Platform  
 **Problem Statement**: A private social network for colleges where students and faculty can share updates, ideas, and announcements in a secure, verified environment.
 
-**Key Features**:
+**Functional Scope**:
 - User verification through College ID
 - Content sharing (posts, comments, likes)
 - Social connections (follow/unfollow)
@@ -20,7 +19,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Assignment1/
@@ -28,15 +27,12 @@ Assignment1/
 ├── college_social_media_dump.sql    # Complete SQL dump (Module A)
 ├── schema.sql                        # Database schema only
 ├── sample_data.sql                   # Sample data only
-├── UML_Documentation.md              # UML diagrams documentation (Module B)
-├── ER_Documentation.md               # ER diagrams documentation (Module B)
-├── README.md                         # This file
-└── REQUIREMENTS_CHECKLIST.md         # Assignment requirements verification
+└── README.md                         # This file
 ```
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Tables (11 total):
 1. **Member** - Core user table with verification
@@ -53,9 +49,9 @@ Assignment1/
 
 ---
 
-## ⚙️ Core Functionalities (5+ required)
+## Core Functionalities (5+ required)
 
-### ✅ 1. User Registration & Verification
+### 1. User Registration & Verification
 - Member registration with college ID
 - Profile verification system
 - Role-based access (Student, Faculty, Staff, Admin)
@@ -74,7 +70,7 @@ UPDATE Member SET IsVerified = TRUE WHERE CollegeID = 'IITGN2023001';
 SELECT * FROM Member WHERE IsVerified = TRUE;
 ```
 
-### ✅ 2. Content Sharing & Engagement
+### 2. Content Sharing & Engagement
 - Create, edit, delete posts
 - Add comments on posts
 - Like posts and comments
@@ -101,7 +97,7 @@ JOIN Member m ON p.MemberID = m.MemberID
 WHERE p.PostID = 1;
 ```
 
-### ✅ 3. Social Connections
+### 3. Social Connections
 - Follow/unfollow users
 - View followers and following
 - Track connection growth
@@ -129,7 +125,7 @@ JOIN Follow f ON m.MemberID = f.FollowerID
 WHERE f.FollowingID = 2;
 ```
 
-### ✅ 4. Content Moderation & Reporting
+### 4. Content Moderation & Reporting
 - Report inappropriate content
 - Review and resolve reports
 - Track moderation actions
@@ -154,7 +150,7 @@ JOIN Member m1 ON r.ReporterID = m1.MemberID
 WHERE r.Status = 'Pending';
 ```
 
-### ✅ 5. Group Management
+### 5. Group Management
 - Create campus groups
 - Join/leave groups
 - Role-based group management (Admin, Moderator, Member)
@@ -177,16 +173,16 @@ JOIN GroupMember gm ON g.GroupID = gm.GroupID
 WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 ```
 
-### ✅ Bonus: Direct Messaging & Notifications
+### Bonus: Direct Messaging & Notifications
 - Send direct messages
 - Real-time notifications
 - Activity logging
 
 ---
 
-## 📊 Assignment Requirements Compliance
+## Assignment Requirements Compliance
 
-### ✅ Module A Requirements:
+### Module A Requirements:
 
 | Requirement | Status | Details |
 |-------------|--------|---------|
@@ -195,27 +191,15 @@ WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 | 5+ Entities | ✅ | 11 entities implemented |
 | 10+ Tables | ✅ | 11 tables implemented |
 | Primary Keys | ✅ | All tables have PKs |
-| Foreign Keys | ✅ | Proper FK relationships with CASCADE/SET NULL |
+| Foreign Keys | ✅ | Proper FK relationships with CASCADE/SET NULL and ON UPDATE CASCADE |
 | Functional Coverage | ✅ | All functionalities supported |
 | Real-life Data | ✅ | 15-20 rows per table with realistic data |
-| Referential Integrity | ✅ | CASCADE and SET NULL constraints |
+| Referential Integrity | ✅ | CASCADE/SET NULL with ON UPDATE CASCADE |
 | 3+ NOT NULL per table | ✅ | All tables have 3+ NOT NULL columns |
 | Unique Row ID | ✅ | All tables have unique identifiers |
 | Logical Constraints | ✅ | Age range, no self-follow, read date logic, etc. |
 
-### ✅ Module B Requirements:
-
-| Requirement | Status | File |
-|-------------|--------|------|
-| UML Diagrams | ✅ | UML_Documentation.md |
-| ER Diagram | ✅ | ER_Documentation.md |
-| UML-to-ER Explanation | ✅ | Included in ER_Documentation.md |
-| Relationship Justifications | ✅ | Detailed in both documents |
-| Constraints Documentation | ✅ | Comprehensive constraint lists |
-
----
-
-## 🚀 Installation & Usage
+## Installation & Usage
 
 ### Prerequisites:
 - MySQL 5.7+ or MariaDB 10.3+
@@ -251,7 +235,7 @@ SELECT 'Post', COUNT(*) FROM Post;
 
 ---
 
-## 🔍 Sample Queries
+## Sample Queries
 
 ### Query 1: Get Most Active Users
 ```sql
@@ -314,7 +298,7 @@ ORDER BY r.ReportDate ASC;
 
 ---
 
-## 🔐 Security & Constraints
+## Security & Constraints
 
 ### CHECK Constraints:
 - Age: 16 ≤ Age ≤ 100
@@ -331,70 +315,28 @@ ORDER BY r.ReportDate ASC;
 - GroupMember: (GroupID, MemberID)
 
 ### Referential Integrity:
-- CASCADE DELETE: When member deleted, their content is removed
-- SET NULL: When reviewer deleted, reports remain but reviewer is cleared
+- CASCADE DELETE: When a member is deleted, dependent data is removed
+- SET NULL: When a reviewer is deleted, reports remain but reviewer is cleared
+- ON UPDATE CASCADE: Key updates propagate to dependent tables
 
 ---
 
-## 📈 Performance Optimization
+## Performance Optimization
 
 ### Indexes Created:
-- Email and CollegeID lookup (Member)
-- Post date sorting (Post)
+- Member role filtering
+- Post member and date lookups
 - Comment lookups by post and member
+- Like target lookups
 - Follow relationship queries
 - Report status filtering
 - Message receiver inbox queries
-- Activity log timestamp ordering
+- Notification member lookups
+- Activity log member and timestamp ordering
 
 ---
 
-## 👥 Team Contributions
-
-This section should be filled by your team:
-
-| Name | Roll Number | Contribution |
-|------|-------------|--------------|
-| [Your Name] | [Roll No] | Schema design, SQL implementation |
-| [Team Member 2] | [Roll No] | Data generation, testing |
-| [Team Member 3] | [Roll No] | UML/ER diagrams, documentation |
-
----
-
-## 📝 Notes for Submission
-
-### Module A Submission:
-- File: `college_social_media_dump.sql`
-- Contains: Complete database with schema and sample data
-- Verified: All constraints and requirements met
-
-### Module B Submission:
-- Prepare a PDF report combining:
-  - UML diagrams (create visual diagrams from UML_Documentation.md)
-  - ER diagram (create visual diagram from ER_Documentation.md)
-  - UML-to-ER transition explanation
-  - Relationship justifications
-  - Team member contributions
-
-### Recommended Tools for Diagrams:
-- draw.io (free, online)
-- Lucidchart (free tier available)
-- Microsoft Visio
-- MySQL Workbench (for ER diagrams)
-
----
-
-## 📞 Contact Information
-
-For queries about this implementation:
-- Instructor: Dr. Yogesh K. Meena
-- Course: CS 432 - Databases
-- Institution: IIT Gandhinagar
-- Semester: II (2025-2026)
-
----
-
-## 📜 License
+## License
 
 This project is created for academic purposes as part of CS 432 course assignment at IIT Gandhinagar.
 

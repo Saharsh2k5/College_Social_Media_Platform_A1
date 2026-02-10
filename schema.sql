@@ -46,8 +46,8 @@ CREATE TABLE Follow (
     FollowerID INT NOT NULL,
     FollowingID INT NOT NULL,
     FollowDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(FollowerID, FollowingID),
     CONSTRAINT chk_no_self_follow CHECK (FollowerID != FollowingID)
 );
@@ -68,7 +68,7 @@ CREATE TABLE Post (
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
     CommentCount INT NOT NULL DEFAULT 0 CHECK (CommentCount >= 0),
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_content_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
 );
 
@@ -85,8 +85,8 @@ CREATE TABLE Comment (
     LastEditDate DATETIME,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_comment_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
 );
 
@@ -100,7 +100,7 @@ CREATE TABLE `Like` (
     TargetType ENUM('Post', 'Comment') NOT NULL,
     TargetID INT NOT NULL,
     LikeDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(MemberID, TargetType, TargetID)
 );
 
@@ -119,8 +119,8 @@ CREATE TABLE Report (
     ReviewedBy INT,
     ReviewDate DATETIME,
     Action VARCHAR(255),
-    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL,
+    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_reason_not_empty CHECK (CHAR_LENGTH(TRIM(Reason)) > 0),
     CONSTRAINT chk_review_logic CHECK (
         (Status = 'Pending' AND ReviewedBy IS NULL) OR
@@ -141,7 +141,7 @@ CREATE TABLE `Group` (
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
     Category ENUM('Academic', 'Sports', 'Cultural', 'Tech', 'Other') NOT NULL DEFAULT 'Other',
     MemberCount INT NOT NULL DEFAULT 0 CHECK (MemberCount >= 0),
-    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_name_not_empty CHECK (CHAR_LENGTH(TRIM(Name)) > 0)
 );
 
@@ -156,8 +156,8 @@ CREATE TABLE GroupMember (
     Role ENUM('Admin', 'Moderator', 'Member') NOT NULL DEFAULT 'Member',
     JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE(GroupID, MemberID)
 );
 
@@ -174,8 +174,8 @@ CREATE TABLE Message (
     IsRead BOOLEAN NOT NULL DEFAULT FALSE,
     ReadDate DATETIME,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE,
+    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_message_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
     CONSTRAINT chk_no_self_message CHECK (SenderID != ReceiverID),
     CONSTRAINT chk_read_date_logic CHECK (
@@ -197,8 +197,12 @@ CREATE TABLE Notification (
     IsRead BOOLEAN NOT NULL DEFAULT FALSE,
     CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ReadDate DATETIME,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE,
-    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
+    CONSTRAINT chk_notification_read_date_logic CHECK (
+        (IsRead = FALSE AND ReadDate IS NULL) OR
+        (IsRead = TRUE AND ReadDate IS NOT NULL)
+    )
 );
 
 -- ============================================================================
@@ -211,15 +215,13 @@ CREATE TABLE ActivityLog (
     ActivityType ENUM('Login', 'Logout', 'Post', 'Comment', 'Like', 'Report', 'ProfileUpdate') NOT NULL,
     Details TEXT NOT NULL,
     IPAddress VARCHAR(45),
-    Timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE
+    `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ============================================================================
 -- Indexes for Performance Optimization
 -- ============================================================================
-CREATE INDEX idx_member_email ON Member(Email);
-CREATE INDEX idx_member_collegeid ON Member(CollegeID);
 CREATE INDEX idx_member_role ON Member(Role);
 CREATE INDEX idx_post_member ON Post(MemberID);
 CREATE INDEX idx_post_date ON Post(PostDate DESC);
@@ -232,7 +234,7 @@ CREATE INDEX idx_report_status ON Report(Status);
 CREATE INDEX idx_message_receiver ON Message(ReceiverID);
 CREATE INDEX idx_notification_member ON Notification(MemberID);
 CREATE INDEX idx_activitylog_member ON ActivityLog(MemberID);
-CREATE INDEX idx_activitylog_timestamp ON ActivityLog(Timestamp DESC);
+CREATE INDEX idx_activitylog_timestamp ON ActivityLog(`Timestamp` DESC);
 
 -- ============================================================================
 -- End of Schema
