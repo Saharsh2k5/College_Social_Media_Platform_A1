@@ -7,27 +7,53 @@
 -- ============================================================================
 -- Insert Sample Data into Member Table (20 rows)
 -- ============================================================================
-INSERT INTO Member (Name, Email, ContactNumber, Age, Image, CollegeID, Role, Department, IsVerified, Bio) VALUES
-('Rahul Sharma', 'rahul.sharma@iitgn.ac.in', '9876543210', 20, 'rahul.jpg', 'IITGN2023001', 'Student', 'Computer Science', TRUE, 'CS undergrad | AI enthusiast | Love coding'),
-('Priya Patel', 'priya.patel@iitgn.ac.in', '9876543211', 19, 'priya.jpg', 'IITGN2024002', 'Student', 'Electrical Engineering', TRUE, 'EE sophomore | Robotics club member'),
-('Dr. Amit Kumar', 'amit.kumar@iitgn.ac.in', '9876543212', 45, 'amit.jpg', 'IITGN2010FAC01', 'Faculty', 'Computer Science', TRUE, 'Associate Professor | Database Systems'),
-('Sneha Gupta', 'sneha.gupta@iitgn.ac.in', '9876543213', 21, 'sneha.jpg', 'IITGN2022003', 'Student', 'Mechanical Engineering', TRUE, 'Mech senior | Formula student team captain'),
-('Arjun Reddy', 'arjun.reddy@iitgn.ac.in', '9876543214', 22, 'arjun.jpg', 'IITGN2021004', 'Student', 'Chemical Engineering', TRUE, 'ChemE | Research enthusiast | Photography'),
-('Ananya Singh', 'ananya.singh@iitgn.ac.in', '9876543215', 20, 'ananya.jpg', 'IITGN2023005', 'Student', 'Computer Science', TRUE, 'CS junior | Web dev | Open source contributor'),
-('Vikram Joshi', 'vikram.joshi@iitgn.ac.in', '9876543216', 19, 'vikram.jpg', 'IITGN2024006', 'Student', 'Civil Engineering', TRUE, 'Civil sophomore | Debate club | Music'),
-('Dr. Meera Shah', 'meera.shah@iitgn.ac.in', '9876543217', 38, 'meera.jpg', 'IITGN2015FAC02', 'Faculty', 'Mathematics', TRUE, 'Assistant Professor | Applied Mathematics'),
-('Karan Malhotra', 'karan.malhotra@iitgn.ac.in', '9876543218', 21, 'karan.jpg', 'IITGN2022007', 'Student', 'Electrical Engineering', TRUE, 'EE | Embedded systems | IoT projects'),
-('Neha Desai', 'neha.desai@iitgn.ac.in', '9876543219', 20, 'neha.jpg', 'IITGN2023008', 'Student', 'Computer Science', TRUE, 'CS | ML researcher | Hackathon winner'),
-('Rohan Kapoor', 'rohan.kapoor@iitgn.ac.in', '9876543220', 22, 'rohan.jpg', 'IITGN2021009', 'Student', 'Mechanical Engineering', TRUE, 'Mech | CAD design | 3D printing'),
-('Ishita Agarwal', 'ishita.agarwal@iitgn.ac.in', '9876543221', 19, 'ishita.jpg', 'IITGN2024010', 'Student', 'Chemical Engineering', TRUE, 'ChemE freshman | Coding club'),
-('Aditya Verma', 'aditya.verma@iitgn.ac.in', '9876543222', 21, 'aditya.jpg', 'IITGN2022011', 'Student', 'Computer Science', TRUE, 'CS | Cybersecurity | CTF player'),
-('Pooja Rao', 'pooja.rao@iitgn.ac.in', '9876543223', 20, 'pooja.jpg', 'IITGN2023012', 'Student', 'Civil Engineering', TRUE, 'Civil | Architecture | Sustainability'),
-('Siddharth Mishra', 'siddharth.mishra@iitgn.ac.in', '9876543224', 19, 'siddharth.jpg', 'IITGN2024013', 'Student', 'Electrical Engineering', TRUE, 'EE | Electronics | Circuit design'),
-('Divya Nair', 'divya.nair@iitgn.ac.in', '9876543225', 22, 'divya.jpg', 'IITGN2021014', 'Student', 'Computer Science', TRUE, 'CS senior | Full stack dev | Placement coordinator'),
-('Abhishek Pandey', 'abhishek.pandey@iitgn.ac.in', '9876543226', 21, 'abhishek.jpg', 'IITGN2022015', 'Student', 'Mechanical Engineering', TRUE, 'Mech | Thermodynamics | Sports enthusiast'),
-('Sakshi Jain', 'sakshi.jain@iitgn.ac.in', '9876543227', 20, 'sakshi.jpg', 'IITGN2023016', 'Student', 'Chemical Engineering', TRUE, 'ChemE | Process design | Dance team'),
-('Varun Saxena', 'varun.saxena@iitgn.ac.in', '9876543228', 35, 'varun.jpg', 'IITGN2018STAFF01', 'Staff', 'Administration', TRUE, 'Network Administrator | IT Support'),
-('Kavya Krishnan', 'kavya.krishnan@iitgn.ac.in', '9876543229', 19, 'kavya.jpg', 'IITGN2024017', 'Student', 'Computer Science', TRUE, 'CS freshman | AI/ML | Competitive programmer');
+INSERT INTO Member (Name, Email, ContactNumber, Image, CollegeID, Role, Department, IsVerified, Bio) VALUES
+('Rahul Sharma', 'rahul.sharma@iitgn.ac.in', '9876543210', 'rahul.jpg', 'IITGN2023001', 'Student', 'Computer Science', TRUE, 'CS undergrad | AI enthusiast | Love coding'),
+('Priya Patel', 'priya.patel@iitgn.ac.in', '9876543211', 'priya.jpg', 'IITGN2024002', 'Student', 'Electrical Engineering', TRUE, 'EE sophomore | Robotics club member'),
+('Dr. Amit Kumar', 'amit.kumar@iitgn.ac.in', '9876543212', 'amit.jpg', 'IITGN2010FAC01', 'Faculty', 'Computer Science', TRUE, 'Associate Professor | Database Systems'),
+('Sneha Gupta', 'sneha.gupta@iitgn.ac.in', '9876543213', 'sneha.jpg', 'IITGN2022003', 'Student', 'Mechanical Engineering', TRUE, 'Mech senior | Formula student team captain'),
+('Arjun Reddy', 'arjun.reddy@iitgn.ac.in', '9876543214', 'arjun.jpg', 'IITGN2021004', 'Student', 'Chemical Engineering', TRUE, 'ChemE | Research enthusiast | Photography'),
+('Ananya Singh', 'ananya.singh@iitgn.ac.in', '9876543215', 'ananya.jpg', 'IITGN2023005', 'Student', 'Computer Science', TRUE, 'CS junior | Web dev | Open source contributor'),
+('Vikram Joshi', 'vikram.joshi@iitgn.ac.in', '9876543216', 'vikram.jpg', 'IITGN2024006', 'Student', 'Civil Engineering', TRUE, 'Civil sophomore | Debate club | Music'),
+('Dr. Meera Shah', 'meera.shah@iitgn.ac.in', '9876543217', 'meera.jpg', 'IITGN2015FAC02', 'Faculty', 'Mathematics', TRUE, 'Assistant Professor | Applied Mathematics'),
+('Karan Malhotra', 'karan.malhotra@iitgn.ac.in', '9876543218', 'karan.jpg', 'IITGN2022007', 'Student', 'Electrical Engineering', TRUE, 'EE | Embedded systems | IoT projects'),
+('Neha Desai', 'neha.desai@iitgn.ac.in', '9876543219', 'neha.jpg', 'IITGN2023008', 'Student', 'Computer Science', TRUE, 'CS | ML researcher | Hackathon winner'),
+('Rohan Kapoor', 'rohan.kapoor@iitgn.ac.in', '9876543220', 'rohan.jpg', 'IITGN2021009', 'Student', 'Mechanical Engineering', TRUE, 'Mech | CAD design | 3D printing'),
+('Ishita Agarwal', 'ishita.agarwal@iitgn.ac.in', '9876543221', 'ishita.jpg', 'IITGN2024010', 'Student', 'Chemical Engineering', TRUE, 'ChemE freshman | Coding club'),
+('Aditya Verma', 'aditya.verma@iitgn.ac.in', '9876543222', 'aditya.jpg', 'IITGN2022011', 'Student', 'Computer Science', TRUE, 'CS | Cybersecurity | CTF player'),
+('Pooja Rao', 'pooja.rao@iitgn.ac.in', '9876543223', 'pooja.jpg', 'IITGN2023012', 'Student', 'Civil Engineering', TRUE, 'Civil | Architecture | Sustainability'),
+('Siddharth Mishra', 'siddharth.mishra@iitgn.ac.in', '9876543224', 'siddharth.jpg', 'IITGN2024013', 'Student', 'Electrical Engineering', TRUE, 'EE | Electronics | Circuit design'),
+('Divya Nair', 'divya.nair@iitgn.ac.in', '9876543225', 'divya.jpg', 'IITGN2021014', 'Student', 'Computer Science', TRUE, 'CS senior | Full stack dev | Placement coordinator'),
+('Abhishek Pandey', 'abhishek.pandey@iitgn.ac.in', '9876543226', 'abhishek.jpg', 'IITGN2022015', 'Student', 'Mechanical Engineering', TRUE, 'Mech | Thermodynamics | Sports enthusiast'),
+('Sakshi Jain', 'sakshi.jain@iitgn.ac.in', '9876543227', 'sakshi.jpg', 'IITGN2023016', 'Student', 'Chemical Engineering', TRUE, 'ChemE | Process design | Dance team'),
+('Varun Saxena', 'varun.saxena@iitgn.ac.in', '9876543228', 'varun.jpg', 'IITGN2018STAFF01', 'Staff', 'Administration', TRUE, 'Network Administrator | IT Support'),
+('Kavya Krishnan', 'kavya.krishnan@iitgn.ac.in', '9876543229', 'kavya.jpg', 'IITGN2024017', 'Student', 'Computer Science', TRUE, 'CS freshman | AI/ML | Competitive programmer');
+
+-- ============================================================================
+-- Insert Sample Data into AuthCredential Table (20 rows)
+-- NOTE: These are dummy password hashes (placeholders), not real passwords.
+-- ============================================================================
+INSERT INTO AuthCredential (MemberID, PasswordHash) VALUES
+(1, '$2b$12$DUMMY_HASH_MEMBER_01___________________________'),
+(2, '$2b$12$DUMMY_HASH_MEMBER_02___________________________'),
+(3, '$2b$12$DUMMY_HASH_MEMBER_03___________________________'),
+(4, '$2b$12$DUMMY_HASH_MEMBER_04___________________________'),
+(5, '$2b$12$DUMMY_HASH_MEMBER_05___________________________'),
+(6, '$2b$12$DUMMY_HASH_MEMBER_06___________________________'),
+(7, '$2b$12$DUMMY_HASH_MEMBER_07___________________________'),
+(8, '$2b$12$DUMMY_HASH_MEMBER_08___________________________'),
+(9, '$2b$12$DUMMY_HASH_MEMBER_09___________________________'),
+(10, '$2b$12$DUMMY_HASH_MEMBER_10__________________________'),
+(11, '$2b$12$DUMMY_HASH_MEMBER_11__________________________'),
+(12, '$2b$12$DUMMY_HASH_MEMBER_12__________________________'),
+(13, '$2b$12$DUMMY_HASH_MEMBER_13__________________________'),
+(14, '$2b$12$DUMMY_HASH_MEMBER_14__________________________'),
+(15, '$2b$12$DUMMY_HASH_MEMBER_15__________________________'),
+(16, '$2b$12$DUMMY_HASH_MEMBER_16__________________________'),
+(17, '$2b$12$DUMMY_HASH_MEMBER_17__________________________'),
+(18, '$2b$12$DUMMY_HASH_MEMBER_18__________________________'),
+(19, '$2b$12$DUMMY_HASH_MEMBER_19__________________________'),
+(20, '$2b$12$DUMMY_HASH_MEMBER_20__________________________');
 
 -- ============================================================================
 -- Insert Sample Data into Follow Table (15 rows)

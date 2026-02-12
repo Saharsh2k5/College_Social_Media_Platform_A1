@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS `Like`;
 DROP TABLE IF EXISTS Comment;
 DROP TABLE IF EXISTS Post;
 DROP TABLE IF EXISTS Follow;
+DROP TABLE IF EXISTS AuthCredential;
 DROP TABLE IF EXISTS Member;
 
 -- ============================================================================
@@ -25,7 +26,6 @@ CREATE TABLE Member (
     Name VARCHAR(100) NOT NULL,
     Email VARCHAR(100) NOT NULL UNIQUE,
     ContactNumber VARCHAR(15) NOT NULL,
-    Age INT NOT NULL CHECK (Age >= 16 AND Age <= 100),
     Image VARCHAR(255) DEFAULT 'default_avatar.jpg',
     CollegeID VARCHAR(20) NOT NULL UNIQUE,
     Role ENUM('Student', 'Faculty', 'Staff', 'Admin') NOT NULL DEFAULT 'Student',
@@ -35,6 +35,19 @@ CREATE TABLE Member (
     LastLogin DATETIME,
     Bio TEXT,
     CONSTRAINT chk_email_format CHECK (Email LIKE '%@%.%')
+);
+
+-- ============================================================================
+-- Table 1B: AuthCredential
+-- Stores authentication credentials (never store plaintext passwords)
+-- One-to-one with Member via MemberID (PK + FK)
+-- ============================================================================
+CREATE TABLE AuthCredential (
+    MemberID INT PRIMARY KEY,
+    PasswordHash VARCHAR(255) NOT NULL,
+    PasswordAlgo VARCHAR(30) NOT NULL DEFAULT 'bcrypt',
+    PasswordUpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ============================================================================

@@ -34,18 +34,19 @@ Assignment1/
 
 ## Database Schema
 
-### Tables (11 total):
+### Tables (12 total):
 1. **Member** - Core user table with verification
-2. **Post** - User posts and updates
-3. **Comment** - Comments on posts
-4. **Like** - Likes on posts and comments
-5. **Follow** - Follower-following relationships
-6. **Report** - Content moderation reports
-7. **Group** - Campus groups and communities
-8. **GroupMember** - Group membership (bridge table)
-9. **Message** - Direct messages between users
-10. **Notification** - User notifications
-11. **ActivityLog** - Activity tracking for analytics
+2. **AuthCredential** - Authentication credentials (password hashes)
+3. **Post** - User posts and updates
+4. **Comment** - Comments on posts
+5. **Like** - Likes on posts and comments
+6. **Follow** - Follower-following relationships
+7. **Report** - Content moderation reports
+8. **Group** - Campus groups and communities
+9. **GroupMember** - Group membership (bridge table)
+10. **Message** - Direct messages between users
+11. **Notification** - User notifications
+12. **ActivityLog** - Activity tracking for analytics
 
 ---
 
@@ -58,7 +59,6 @@ CREATE TABLE Member (
     Name VARCHAR(100) NOT NULL,
     Email VARCHAR(100) NOT NULL UNIQUE,
     ContactNumber VARCHAR(15) NOT NULL,
-    Age INT NOT NULL CHECK (Age >= 16 AND Age <= 100),
     Image VARCHAR(255) DEFAULT 'default_avatar.jpg',
     CollegeID VARCHAR(20) NOT NULL UNIQUE,
     Role ENUM('Student', 'Faculty', 'Staff', 'Admin') NOT NULL DEFAULT 'Student',
@@ -68,6 +68,17 @@ CREATE TABLE Member (
     LastLogin DATETIME,
     Bio TEXT,
     CONSTRAINT chk_email_format CHECK (Email LIKE '%@%.%')
+);
+```
+
+### AuthCredential
+```sql
+CREATE TABLE AuthCredential (
+    MemberID INT PRIMARY KEY,
+    PasswordHash VARCHAR(255) NOT NULL,
+    PasswordAlgo VARCHAR(30) NOT NULL DEFAULT 'bcrypt',
+    PasswordUpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 ```
 
@@ -256,8 +267,8 @@ CREATE TABLE ActivityLog (
 **SQL Examples**:
 ```sql
 -- Register new member
-INSERT INTO Member (Name, Email, ContactNumber, Age, CollegeID, Department)
-VALUES ('John Doe', 'john.doe@iitgn.ac.in', '9876543210', 20, 'IITGN2023001', 'Computer Science');
+INSERT INTO Member (Name, Email, ContactNumber, CollegeID, Department)
+VALUES ('John Doe', 'john.doe@iitgn.ac.in', '9876543210', 'IITGN2023001', 'Computer Science');
 
 -- Verify member
 UPDATE Member SET IsVerified = TRUE WHERE CollegeID = 'IITGN2023001';
@@ -384,8 +395,8 @@ WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 |-------------|--------|---------|
 | Member Table | ✅ | Complete with all required attributes |
 | 5+ Functionalities | ✅ | 5 core + 2 bonus functionalities |
-| 5+ Entities | ✅ | 11 entities implemented |
-| 10+ Tables | ✅ | 11 tables implemented |
+| 5+ Entities | ✅ | 12 entities implemented |
+| 10+ Tables | ✅ | 12 tables implemented |
 | Primary Keys | ✅ | All tables have PKs |
 | Foreign Keys | ✅ | Proper FK relationships with CASCADE/SET NULL and ON UPDATE CASCADE |
 | Functional Coverage | ✅ | All functionalities supported |
@@ -393,7 +404,7 @@ WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 | Referential Integrity | ✅ | CASCADE/SET NULL with ON UPDATE CASCADE |
 | 3+ NOT NULL per table | ✅ | All tables have 3+ NOT NULL columns |
 | Unique Row ID | ✅ | All tables have unique identifiers |
-| Logical Constraints | ✅ | Age range, no self-follow, read date logic, etc. |
+| Logical Constraints | ✅ | No self-follow, read date logic, non-empty content, etc. |
 
 ## Installation & Usage
 
@@ -497,7 +508,6 @@ ORDER BY r.ReportDate ASC;
 ## Security & Constraints
 
 ### CHECK Constraints:
-- Age: 16 ≤ Age ≤ 100
 - Email format: Must contain '@' and '.'
 - No self-following: FollowerID ≠ FollowingID
 - No self-messaging: SenderID ≠ ReceiverID
