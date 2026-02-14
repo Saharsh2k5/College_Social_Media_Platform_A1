@@ -138,7 +138,8 @@ CREATE TABLE Report (
     CONSTRAINT chk_review_logic CHECK (
         (Status = 'Pending' AND ReviewedBy IS NULL) OR
         (Status != 'Pending' AND ReviewedBy IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_report_chronology CHECK (ReviewDate IS NULL OR ReviewDate >= ReportDate)
 );
 
 -- ============================================================================
@@ -194,7 +195,8 @@ CREATE TABLE Message (
     CONSTRAINT chk_read_date_logic CHECK (
         (IsRead = FALSE AND ReadDate IS NULL) OR
         (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_message_chronology CHECK (ReadDate IS NULL OR ReadDate >= SendDate)
 );
 
 -- ============================================================================
@@ -215,7 +217,8 @@ CREATE TABLE Notification (
     CONSTRAINT chk_notification_read_date_logic CHECK (
         (IsRead = FALSE AND ReadDate IS NULL) OR
         (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_notification_chronology CHECK (ReadDate IS NULL OR ReadDate >= CreateDate)
 );
 
 -- ============================================================================

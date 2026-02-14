@@ -160,7 +160,8 @@ CREATE TABLE Report (
     CONSTRAINT chk_review_logic CHECK (
         (Status = 'Pending' AND ReviewedBy IS NULL) OR
         (Status != 'Pending' AND ReviewedBy IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_report_chronology CHECK (ReviewDate IS NULL OR ReviewDate >= ReportDate)
 );
 
 -- ============================================================================
@@ -216,7 +217,8 @@ CREATE TABLE Message (
     CONSTRAINT chk_read_date_logic CHECK (
         (IsRead = FALSE AND ReadDate IS NULL) OR
         (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_message_chronology CHECK (ReadDate IS NULL OR ReadDate >= SendDate)
 );
 
 -- ============================================================================
@@ -237,7 +239,8 @@ CREATE TABLE Notification (
     CONSTRAINT chk_notification_read_date_logic CHECK (
         (IsRead = FALSE AND ReadDate IS NULL) OR
         (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
+    ),
+    CONSTRAINT chk_notification_chronology CHECK (ReadDate IS NULL OR ReadDate >= CreateDate)
 );
 
 -- ============================================================================
@@ -299,7 +302,6 @@ INSERT INTO Member (Name, Email, ContactNumber, Image, CollegeID, Role, Departme
 ('Kavya Krishnan', 'kavya.krishnan@iitgn.ac.in', '9876543229', 'kavya.jpg', 'IITGN2024017', 'Student', 'Computer Science', TRUE, 'CS freshman | AI/ML | Competitive programmer');
 
 -- Insert Sample Data into AuthCredential Table (20 rows)
--- NOTE: These are dummy password hashes (placeholders), not real passwords.
 INSERT INTO AuthCredential (MemberID, PasswordHash) VALUES
 (1, '$2b$12$DUMMY_HASH_MEMBER_01___________________________'),
 (2, '$2b$12$DUMMY_HASH_MEMBER_02___________________________'),
@@ -387,23 +389,23 @@ INSERT INTO `Like` (MemberID, TargetType, TargetID) VALUES
 (1, 'Comment', 1), (2, 'Comment', 4), (6, 'Comment', 7),
 (10, 'Comment', 17), (13, 'Comment', 19);
 
--- Insert Sample Data into Report Table (12 rows)
-INSERT INTO Report (ReporterID, ReportedItemType, ReportedItemID, Reason, Status, ReviewedBy, ReviewDate, Action) VALUES
-(2, 'Post', 13, 'Spam content with irrelevant links', 'Resolved', 3, '2026-02-01 10:30:00', 'Post removed'),
-(6, 'Comment', 8, 'Inappropriate language used', 'Resolved', 3, '2026-02-01 14:20:00', 'Comment deleted'),
-(10, 'Member', 15, 'Fake profile using someone else''s photo', 'Reviewed', 3, '2026-02-02 09:15:00', 'Under investigation'),
-(1, 'Post', 7, 'Misleading information about exam dates', 'Dismissed', 3, '2026-02-02 16:45:00', 'Verified as accurate'),
-(4, 'Comment', 12, 'Harassment and bullying', 'Resolved', 8, '2026-02-03 11:00:00', 'User warned'),
-(9, 'Post', 15, 'Advertisement of external services', 'Pending', NULL, NULL, NULL),
-(13, 'Member', 7, 'Creating multiple fake accounts', 'Pending', NULL, NULL, NULL),
-(14, 'Post', 19, 'Copyright violation - using others'' work', 'Reviewed', 3, '2026-02-03 15:30:00', 'Asked for attribution'),
-(6, 'Comment', 15, 'Off-topic spam comments', 'Resolved', 8, '2026-02-04 08:20:00', 'Comment removed'),
-(1, 'Post', 11, 'Sensitive personal information shared', 'Resolved', 3, '2026-02-04 10:00:00', 'Post edited'),
-(10, 'Comment', 19, 'Hate speech and discrimination', 'Pending', NULL, NULL, NULL),
-(16, 'Member', 20, 'Impersonating faculty member', 'Reviewed', 3, '2026-02-04 12:15:00', 'Profile verification required'),
-(11, 'Post', 3, 'Duplicate announcement content', 'Dismissed', 3, '2026-02-05 12:00:00', 'No issue found'),
-(12, 'Comment', 5, 'Uncivil tone in discussion', 'Resolved', 8, '2026-02-05 13:30:00', 'Comment removed'),
-(15, 'Post', 2, 'Suspicious links in post', 'Pending', NULL, NULL, NULL);
+-- Insert Sample Data into Report Table (12 rows) - Explicit ReportDates included
+INSERT INTO Report (ReporterID, ReportedItemType, ReportedItemID, Reason, Status, ReportDate, ReviewedBy, ReviewDate, Action) VALUES
+(2, 'Post', 13, 'Spam content with irrelevant links', 'Resolved', '2026-02-01 09:30:00', 3, '2026-02-01 10:30:00', 'Post removed'),
+(6, 'Comment', 8, 'Inappropriate language used', 'Resolved', '2026-02-01 13:20:00', 3, '2026-02-01 14:20:00', 'Comment deleted'),
+(10, 'Member', 15, 'Fake profile using someone else''s photo', 'Reviewed', '2026-02-02 08:15:00', 3, '2026-02-02 09:15:00', 'Under investigation'),
+(1, 'Post', 7, 'Misleading information about exam dates', 'Dismissed', '2026-02-02 15:45:00', 3, '2026-02-02 16:45:00', 'Verified as accurate'),
+(4, 'Comment', 12, 'Harassment and bullying', 'Resolved', '2026-02-03 10:00:00', 8, '2026-02-03 11:00:00', 'User warned'),
+(9, 'Post', 15, 'Advertisement of external services', 'Pending', '2026-02-03 12:00:00', NULL, NULL, NULL),
+(13, 'Member', 7, 'Creating multiple fake accounts', 'Pending', '2026-02-03 14:00:00', NULL, NULL, NULL),
+(14, 'Post', 19, 'Copyright violation - using others'' work', 'Reviewed', '2026-02-03 14:30:00', 3, '2026-02-03 15:30:00', 'Asked for attribution'),
+(6, 'Comment', 15, 'Off-topic spam comments', 'Resolved', '2026-02-04 07:20:00', 8, '2026-02-04 08:20:00', 'Comment removed'),
+(1, 'Post', 11, 'Sensitive personal information shared', 'Resolved', '2026-02-04 09:00:00', 3, '2026-02-04 10:00:00', 'Post edited'),
+(10, 'Comment', 19, 'Hate speech and discrimination', 'Pending', '2026-02-04 11:00:00', NULL, NULL, NULL),
+(16, 'Member', 20, 'Impersonating faculty member', 'Reviewed', '2026-02-04 11:15:00', 3, '2026-02-04 12:15:00', 'Profile verification required'),
+(11, 'Post', 3, 'Duplicate announcement content', 'Dismissed', '2026-02-05 11:00:00', 3, '2026-02-05 12:00:00', 'No issue found'),
+(12, 'Comment', 5, 'Uncivil tone in discussion', 'Resolved', '2026-02-05 12:30:00', 8, '2026-02-05 13:30:00', 'Comment removed'),
+(15, 'Post', 2, 'Suspicious links in post', 'Pending', '2026-02-05 14:00:00', NULL, NULL, NULL);
 
 -- Insert Sample Data into Group Table (15 rows)
 INSERT INTO `Group` (Name, Description, CreatorID, Category, MemberCount) VALUES
@@ -432,51 +434,51 @@ INSERT INTO GroupMember (GroupID, MemberID, Role) VALUES
 (5, 7, 'Admin'), (5, 2, 'Member'),
 (7, 6, 'Admin'), (7, 1, 'Moderator'), (7, 10, 'Member');
 
--- Insert Sample Data into Message Table (15 rows)
-INSERT INTO Message (SenderID, ReceiverID, Content, IsRead, ReadDate) VALUES
-(1, 2, 'Hey Priya! Congratulations on the robotics competition qualification!', TRUE, '2026-02-01 10:15:00'),
-(2, 1, 'Thanks Rahul! How is your database assignment going?', TRUE, '2026-02-01 10:30:00'),
-(6, 1, 'Can you help me with the normalization concepts? I''m a bit confused.', TRUE, '2026-02-02 14:20:00'),
-(1, 6, 'Sure! Let''s meet in the library at 4 PM today.', TRUE, '2026-02-02 14:35:00'),
-(10, 1, 'Hey! Want to team up for the upcoming hackathon?', TRUE, '2026-02-02 18:45:00'),
-(1, 10, 'Absolutely! Your ML skills + my backend development = winning combo!', TRUE, '2026-02-02 19:00:00'),
-(4, 11, 'The CAD files for the new chassis are ready. Check your email.', TRUE, '2026-02-03 09:30:00'),
-(13, 1, 'Any resources for learning penetration testing?', FALSE, NULL),
-(14, 4, 'Are you joining the sustainability event this Sunday?', TRUE, '2026-02-03 16:20:00'),
-(6, 10, 'I checked out your ML model. Impressive accuracy! Can we collaborate?', TRUE, '2026-02-04 08:40:00'),
-(10, 6, 'Thanks! Yes, let''s work on a project together.', TRUE, '2026-02-04 09:10:00'),
-(16, 1, 'Need any help with placement preparation? I can share some resources.', FALSE, NULL),
-(7, 5, 'Great research paper! Can I cite it in my presentation?', TRUE, '2026-02-04 11:25:00'),
-(9, 2, 'Want to collaborate on an IoT project for the smart campus?', FALSE, NULL),
-(20, 10, 'I''m new to ML. Can you suggest some beginner-friendly projects?', FALSE, NULL),
-(2, 6, 'Are you joining the ML study group this week?', FALSE, NULL),
-(5, 1, 'Can you review my draft before submission?', FALSE, NULL),
-(3, 10, 'Please share the rubric for Assignment 1.', TRUE, '2026-02-05 10:00:00'),
-(8, 4, 'Math Circle meeting tomorrow at 5 PM in the seminar room.', TRUE, '2026-02-05 17:15:00'),
-(11, 4, 'Great CAD model! Can you send the STL file?', FALSE, NULL);
+-- Insert Sample Data into Message Table (15 rows) - Explicit SendDates included
+INSERT INTO Message (SenderID, ReceiverID, Content, SendDate, IsRead, ReadDate) VALUES
+(1, 2, 'Hey Priya! Congratulations on the robotics competition qualification!', '2026-02-01 10:00:00', TRUE, '2026-02-01 10:15:00'),
+(2, 1, 'Thanks Rahul! How is your database assignment going?', '2026-02-01 10:20:00', TRUE, '2026-02-01 10:30:00'),
+(6, 1, 'Can you help me with the normalization concepts? I''m a bit confused.', '2026-02-02 14:00:00', TRUE, '2026-02-02 14:20:00'),
+(1, 6, 'Sure! Let''s meet in the library at 4 PM today.', '2026-02-02 14:30:00', TRUE, '2026-02-02 14:35:00'),
+(10, 1, 'Hey! Want to team up for the upcoming hackathon?', '2026-02-02 18:00:00', TRUE, '2026-02-02 18:45:00'),
+(1, 10, 'Absolutely! Your ML skills + my backend development = winning combo!', '2026-02-02 18:50:00', TRUE, '2026-02-02 19:00:00'),
+(4, 11, 'The CAD files for the new chassis are ready. Check your email.', '2026-02-03 09:00:00', TRUE, '2026-02-03 09:30:00'),
+(13, 1, 'Any resources for learning penetration testing?', '2026-02-03 10:00:00', FALSE, NULL),
+(14, 4, 'Are you joining the sustainability event this Sunday?', '2026-02-03 16:00:00', TRUE, '2026-02-03 16:20:00'),
+(6, 10, 'I checked out your ML model. Impressive accuracy! Can we collaborate?', '2026-02-04 08:30:00', TRUE, '2026-02-04 08:40:00'),
+(10, 6, 'Thanks! Yes, let''s work on a project together.', '2026-02-04 09:00:00', TRUE, '2026-02-04 09:10:00'),
+(16, 1, 'Need any help with placement preparation? I can share some resources.', '2026-02-04 10:00:00', FALSE, NULL),
+(7, 5, 'Great research paper! Can I cite it in my presentation?', '2026-02-04 11:00:00', TRUE, '2026-02-04 11:25:00'),
+(9, 2, 'Want to collaborate on an IoT project for the smart campus?', '2026-02-04 12:00:00', FALSE, NULL),
+(20, 10, 'I''m new to ML. Can you suggest some beginner-friendly projects?', '2026-02-04 13:00:00', FALSE, NULL),
+(2, 6, 'Are you joining the ML study group this week?', '2026-02-04 14:00:00', FALSE, NULL),
+(5, 1, 'Can you review my draft before submission?', '2026-02-05 09:00:00', FALSE, NULL),
+(3, 10, 'Please share the rubric for Assignment 1.', '2026-02-05 09:30:00', TRUE, '2026-02-05 10:00:00'),
+(8, 4, 'Math Circle meeting tomorrow at 5 PM in the seminar room.', '2026-02-05 17:00:00', TRUE, '2026-02-05 17:15:00'),
+(11, 4, 'Great CAD model! Can you send the STL file?', '2026-02-05 18:00:00', FALSE, NULL);
 
--- Insert Sample Data into Notification Table (20 rows)
-INSERT INTO Notification (MemberID, Type, Content, ReferenceID, IsRead, ReadDate) VALUES
-(1, 'Like', 'Priya Patel liked your post about database assignment', 1, TRUE, '2026-02-01 09:15:00'),
-(1, 'Comment', 'Ananya Singh commented on your post', 1, TRUE, '2026-02-01 09:30:00'),
-(1, 'Follow', 'Neha Desai started following you', 10, TRUE, '2026-02-01 11:00:00'),
-(2, 'Like', 'Rahul Sharma liked your post about robotics competition', 2, TRUE, '2026-02-01 12:20:00'),
-(6, 'Comment', 'Rahul Sharma commented on your post', 6, TRUE, '2026-02-02 10:45:00'),
-(10, 'Like', 'Multiple people liked your hackathon achievement post', 10, TRUE, '2026-02-02 15:30:00'),
-(3, 'Comment', 'Students commented on your exam announcement', 3, TRUE, '2026-02-01 16:00:00'),
-(4, 'Like', 'Rohan Kapoor liked your Formula Student post', 4, FALSE, NULL),
-(5, 'Comment', 'Dr. Amit Kumar commented on your research paper', 5, TRUE, '2026-02-02 08:15:00'),
-(6, 'Follow', 'Kavya Krishnan started following you', 20, FALSE, NULL),
-(7, 'Like', 'Priya Patel liked your debate competition post', 7, TRUE, '2026-02-02 14:40:00'),
-(1, 'GroupInvite', 'You have been invited to join Machine Learning Study Group', 4, FALSE, NULL),
-(10, 'Mention', 'Rahul Sharma mentioned you in a comment', 12, TRUE, '2026-02-03 09:50:00'),
-(16, 'Comment', 'Multiple students commented on your placement tips post', 16, TRUE, '2026-02-03 17:20:00'),
-(1, 'Like', 'Neha Desai liked your comment', 16, FALSE, NULL),
-(6, 'Comment', 'Neha Desai commented on your web application post', 6, TRUE, '2026-02-04 10:15:00'),
-(14, 'Like', 'Multiple people liked your sustainability post', 14, FALSE, NULL),
-(2, 'Comment', 'Vikram Saxena commented on your circuit workshop post', 20, FALSE, NULL),
-(10, 'Like', 'Everyone is congratulating you on ICML acceptance!', 18, TRUE, '2026-02-04 11:45:00'),
-(20, 'Comment', 'Students shared Python learning resources', 19, FALSE, NULL);
+-- Insert Sample Data into Notification Table (20 rows) - Explicit CreateDates included
+INSERT INTO Notification (MemberID, Type, Content, ReferenceID, CreateDate, IsRead, ReadDate) VALUES
+(1, 'Like', 'Priya Patel liked your post about database assignment', 1, '2026-02-01 09:00:00', TRUE, '2026-02-01 09:15:00'),
+(1, 'Comment', 'Ananya Singh commented on your post', 1, '2026-02-01 09:15:00', TRUE, '2026-02-01 09:30:00'),
+(1, 'Follow', 'Neha Desai started following you', 10, '2026-02-01 10:00:00', TRUE, '2026-02-01 11:00:00'),
+(2, 'Like', 'Rahul Sharma liked your post about robotics competition', 2, '2026-02-01 12:00:00', TRUE, '2026-02-01 12:20:00'),
+(6, 'Comment', 'Rahul Sharma commented on your post', 6, '2026-02-02 10:00:00', TRUE, '2026-02-02 10:45:00'),
+(10, 'Like', 'Multiple people liked your hackathon achievement post', 10, '2026-02-02 15:00:00', TRUE, '2026-02-02 15:30:00'),
+(3, 'Comment', 'Students commented on your exam announcement', 3, '2026-02-01 15:00:00', TRUE, '2026-02-01 16:00:00'),
+(4, 'Like', 'Rohan Kapoor liked your Formula Student post', 4, '2026-02-02 09:00:00', FALSE, NULL),
+(5, 'Comment', 'Dr. Amit Kumar commented on your research paper', 5, '2026-02-02 08:00:00', TRUE, '2026-02-02 08:15:00'),
+(6, 'Follow', 'Kavya Krishnan started following you', 20, '2026-02-02 10:00:00', FALSE, NULL),
+(7, 'Like', 'Priya Patel liked your debate competition post', 7, '2026-02-02 14:00:00', TRUE, '2026-02-02 14:40:00'),
+(1, 'GroupInvite', 'You have been invited to join Machine Learning Study Group', 4, '2026-02-03 09:00:00', FALSE, NULL),
+(10, 'Mention', 'Rahul Sharma mentioned you in a comment', 12, '2026-02-03 09:30:00', TRUE, '2026-02-03 09:50:00'),
+(16, 'Comment', 'Multiple students commented on your placement tips post', 16, '2026-02-03 17:00:00', TRUE, '2026-02-03 17:20:00'),
+(1, 'Like', 'Neha Desai liked your comment', 16, '2026-02-04 09:00:00', FALSE, NULL),
+(6, 'Comment', 'Neha Desai commented on your web application post', 6, '2026-02-04 10:00:00', TRUE, '2026-02-04 10:15:00'),
+(14, 'Like', 'Multiple people liked your sustainability post', 14, '2026-02-04 11:00:00', FALSE, NULL),
+(2, 'Comment', 'Vikram Saxena commented on your circuit workshop post', 20, '2026-02-04 12:00:00', FALSE, NULL),
+(10, 'Like', 'Everyone is congratulating you on ICML acceptance!', 18, '2026-02-04 11:30:00', TRUE, '2026-02-04 11:45:00'),
+(20, 'Comment', 'Students shared Python learning resources', 19, '2026-02-04 14:00:00', FALSE, NULL);
 
 -- Insert Sample Data into ActivityLog Table (20 rows)
 INSERT INTO ActivityLog (MemberID, ActivityType, Details, IPAddress, `Timestamp`) VALUES
