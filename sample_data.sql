@@ -1,7 +1,6 @@
 -- ============================================================================
 -- College Social Media Platform - Sample Data
 -- CS 432 - Databases Assignment 1
--- Generated: February 4, 2026
 -- ============================================================================
 
 -- ============================================================================
@@ -56,7 +55,7 @@ INSERT INTO AuthCredential (MemberID, PasswordHash) VALUES
 (20, '$2b$12$DUMMY_HASH_MEMBER_20__________________________');
 
 -- ============================================================================
--- Insert Sample Data into Follow Table (15 rows)
+-- Insert Sample Data into Follow Table (20 rows)
 -- ============================================================================
 INSERT INTO Follow (FollowerID, FollowingID) VALUES
 (1, 2), (1, 3), (1, 6), (1, 10),
@@ -129,7 +128,7 @@ INSERT INTO `Like` (MemberID, TargetType, TargetID) VALUES
 (10, 'Comment', 17), (13, 'Comment', 19);
 
 -- ============================================================================
--- Insert Sample Data into Report Table (12 rows) - Explicit ReportDates included
+-- Insert Sample Data into Report Table (15 rows) - Explicit ReportDates included
 -- ============================================================================
 INSERT INTO Report (ReporterID, ReportedItemType, ReportedItemID, Reason, Status, ReportDate, ReviewedBy, ReviewDate, Action) VALUES
 (2, 'Post', 13, 'Spam content with irrelevant links', 'Resolved', '2026-02-01 09:30:00', 3, '2026-02-01 10:30:00', 'Post removed'),
@@ -180,7 +179,7 @@ INSERT INTO GroupMember (GroupID, MemberID, Role) VALUES
 (7, 6, 'Admin'), (7, 1, 'Moderator'), (7, 10, 'Member');
 
 -- ============================================================================
--- Insert Sample Data into Message Table (15 rows) - Explicit SendDates included
+-- Insert Sample Data into Message Table (20 rows) - Explicit SendDates included
 -- ============================================================================
 INSERT INTO Message (SenderID, ReceiverID, Content, SendDate, IsRead, ReadDate) VALUES
 (1, 2, 'Hey Priya! Congratulations on the robotics competition qualification!', '2026-02-01 10:00:00', TRUE, '2026-02-01 10:15:00'),

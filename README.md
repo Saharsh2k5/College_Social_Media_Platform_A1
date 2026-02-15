@@ -1,12 +1,10 @@
-# College Social Media Platform - Database Assignment
-## CS 432 - Databases (Course Project/Assignment 1)
-## IIT Gandhinagar - February 4, 2026
+# College Social Media Platform
 
+---
 
 ## Project Overview
-
-**Domain**: College Social Media Platform  
-**Problem Statement**: A private social network for colleges where students and faculty can share updates, ideas, and announcements in a secure, verified environment.
+ 
+**Objective**: Design and implement a relational database for a private social network enabling secure, verified communication and content sharing among college students and faculty.
 
 **Functional Scope**:
 - User verification through College ID
@@ -34,7 +32,8 @@ Assignment1/
 
 ## Database Schema
 
-### Tables (12 total):
+The database consists of **12 tables** supporting a comprehensive college social media platform:
+
 1. **Member** - Core user table with verification
 2. **AuthCredential** - Authentication credentials (password hashes)
 3. **Post** - User posts and updates
@@ -48,221 +47,17 @@ Assignment1/
 11. **Notification** - User notifications
 12. **ActivityLog** - Activity tracking for analytics
 
----
-
-## Table Schemas
-
-### Member
-```sql
-CREATE TABLE Member (
-    MemberID INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(100) NOT NULL,
-    Email VARCHAR(100) NOT NULL UNIQUE,
-    ContactNumber VARCHAR(15) NOT NULL,
-    Image VARCHAR(255) DEFAULT 'default_avatar.jpg',
-    CollegeID VARCHAR(20) NOT NULL UNIQUE,
-    Role ENUM('Student', 'Faculty', 'Staff', 'Admin') NOT NULL DEFAULT 'Student',
-    Department VARCHAR(50) NOT NULL,
-    IsVerified BOOLEAN NOT NULL DEFAULT FALSE,
-    JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    LastLogin DATETIME,
-    Bio TEXT,
-    CONSTRAINT chk_email_format CHECK (Email LIKE '%@%.%')
-);
-```
-
-### AuthCredential
-```sql
-CREATE TABLE AuthCredential (
-    MemberID INT PRIMARY KEY,
-    PasswordHash VARCHAR(255) NOT NULL,
-    PasswordAlgo VARCHAR(30) NOT NULL DEFAULT 'bcrypt',
-    PasswordUpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
-);
-```
-
-### Follow
-```sql
-CREATE TABLE Follow (
-    FollowID INT PRIMARY KEY AUTO_INCREMENT,
-    FollowerID INT NOT NULL,
-    FollowingID INT NOT NULL,
-    FollowDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE(FollowerID, FollowingID),
-    CONSTRAINT chk_no_self_follow CHECK (FollowerID != FollowingID)
-);
-```
-
-### Post
-```sql
-CREATE TABLE Post (
-    PostID INT PRIMARY KEY AUTO_INCREMENT,
-    MemberID INT NOT NULL,
-    Content TEXT NOT NULL,
-    MediaURL VARCHAR(255),
-    MediaType ENUM('Image', 'Video', 'Document', 'None') NOT NULL DEFAULT 'None',
-    PostDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    LastEditDate DATETIME,
-    Visibility ENUM('Public', 'Followers', 'Private') NOT NULL DEFAULT 'Public',
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
-    CommentCount INT NOT NULL DEFAULT 0 CHECK (CommentCount >= 0),
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_content_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
-);
-```
-
-### Comment
-```sql
-CREATE TABLE Comment (
-    CommentID INT PRIMARY KEY AUTO_INCREMENT,
-    PostID INT NOT NULL,
-    MemberID INT NOT NULL,
-    Content TEXT NOT NULL,
-    CommentDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    LastEditDate DATETIME,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    LikeCount INT NOT NULL DEFAULT 0 CHECK (LikeCount >= 0),
-    FOREIGN KEY (PostID) REFERENCES Post(PostID) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_comment_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0)
-);
-```
-
-### Like
-```sql
-CREATE TABLE `Like` (
-    LikeID INT PRIMARY KEY AUTO_INCREMENT,
-    MemberID INT NOT NULL,
-    TargetType ENUM('Post', 'Comment') NOT NULL,
-    TargetID INT NOT NULL,
-    LikeDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE(MemberID, TargetType, TargetID)
-);
-```
-
-### Report
-```sql
-CREATE TABLE Report (
-    ReportID INT PRIMARY KEY AUTO_INCREMENT,
-    ReporterID INT NOT NULL,
-    ReportedItemType ENUM('Post', 'Comment', 'Member') NOT NULL,
-    ReportedItemID INT NOT NULL,
-    Reason TEXT NOT NULL,
-    Status ENUM('Pending', 'Reviewed', 'Resolved', 'Dismissed') NOT NULL DEFAULT 'Pending',
-    ReportDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ReviewedBy INT,
-    ReviewDate DATETIME,
-    Action VARCHAR(255),
-    FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT chk_reason_not_empty CHECK (CHAR_LENGTH(TRIM(Reason)) > 0),
-    CONSTRAINT chk_review_logic CHECK (
-        (Status = 'Pending' AND ReviewedBy IS NULL) OR
-        (Status != 'Pending' AND ReviewedBy IS NOT NULL)
-    )
-);
-```
-
-### Group
-```sql
-CREATE TABLE `Group` (
-    GroupID INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(100) NOT NULL,
-    Description TEXT NOT NULL,
-    CreatorID INT NOT NULL,
-    CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    Category ENUM('Academic', 'Sports', 'Cultural', 'Tech', 'Other') NOT NULL DEFAULT 'Other',
-    MemberCount INT NOT NULL DEFAULT 0 CHECK (MemberCount >= 0),
-    FOREIGN KEY (CreatorID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_name_not_empty CHECK (CHAR_LENGTH(TRIM(Name)) > 0)
-);
-```
-
-### GroupMember
-```sql
-CREATE TABLE GroupMember (
-    GroupMemberID INT PRIMARY KEY AUTO_INCREMENT,
-    GroupID INT NOT NULL,
-    MemberID INT NOT NULL,
-    Role ENUM('Admin', 'Moderator', 'Member') NOT NULL DEFAULT 'Member',
-    JoinDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (GroupID) REFERENCES `Group`(GroupID) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE(GroupID, MemberID)
-);
-```
-
-### Message
-```sql
-CREATE TABLE Message (
-    MessageID INT PRIMARY KEY AUTO_INCREMENT,
-    SenderID INT NOT NULL,
-    ReceiverID INT NOT NULL,
-    Content TEXT NOT NULL,
-    SendDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
-    ReadDate DATETIME,
-    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_message_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
-    CONSTRAINT chk_no_self_message CHECK (SenderID != ReceiverID),
-    CONSTRAINT chk_read_date_logic CHECK (
-        (IsRead = FALSE AND ReadDate IS NULL) OR
-        (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
-);
-```
-
-### Notification
-```sql
-CREATE TABLE Notification (
-    NotificationID INT PRIMARY KEY AUTO_INCREMENT,
-    MemberID INT NOT NULL,
-    Type ENUM('Like', 'Comment', 'Follow', 'Mention', 'GroupInvite', 'Report') NOT NULL,
-    Content TEXT NOT NULL,
-    ReferenceID INT,
-    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
-    CreateDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ReadDate DATETIME,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_notification_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
-    CONSTRAINT chk_notification_read_date_logic CHECK (
-        (IsRead = FALSE AND ReadDate IS NULL) OR
-        (IsRead = TRUE AND ReadDate IS NOT NULL)
-    )
-);
-```
-
-### ActivityLog
-```sql
-CREATE TABLE ActivityLog (
-    LogID INT PRIMARY KEY AUTO_INCREMENT,
-    MemberID INT NOT NULL,
-    ActivityType ENUM('Login', 'Logout', 'Post', 'Comment', 'Like', 'Report', 'ProfileUpdate') NOT NULL,
-    Details TEXT NOT NULL,
-    IPAddress VARCHAR(45),
-    `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MemberID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE
-);
-```
+For detailed schema definitions, see [schema.sql](schema.sql).
 
 ---
 
-## Core Functionalities (5+ required)
+## Core Functionalities
 
 ### 1. User Registration & Verification
-- Member registration with college ID
+- Member registration with unique college ID
 - Profile verification system
-- Role-based access (Student, Faculty, Staff, Admin)
-- Profile management
+- Role-based access control (Student, Faculty, Staff, Admin)
+- Complete profile management
 
 **SQL Examples**:
 ```sql
@@ -278,10 +73,10 @@ SELECT * FROM Member WHERE IsVerified = TRUE;
 ```
 
 ### 2. Content Sharing & Engagement
-- Create, edit, delete posts
-- Add comments on posts
-- Like posts and comments
-- Media attachments support
+- Full CRUD operations on posts
+- Hierarchical commenting system
+- Like functionality for posts and comments
+- Media attachment support (images, videos, documents)
 
 **SQL Examples**:
 ```sql
@@ -305,9 +100,9 @@ WHERE p.PostID = 1;
 ```
 
 ### 3. Social Connections
-- Follow/unfollow users
-- View followers and following
-- Track connection growth
+- Bidirectional follow relationships
+- Follower and following lists
+- Connection analytics
 
 **SQL Examples**:
 ```sql
@@ -358,10 +153,10 @@ WHERE r.Status = 'Pending';
 ```
 
 ### 5. Group Management
-- Create campus groups
-- Join/leave groups
-- Role-based group management (Admin, Moderator, Member)
-- Category-based organization
+- Campus group creation and management
+- Dynamic group membership
+- Hierarchical role system (Admin, Moderator, Member)
+- Categorical organization (Academic, Sports, Cultural, Tech, Other)
 
 **SQL Examples**:
 ```sql
@@ -380,61 +175,37 @@ JOIN GroupMember gm ON g.GroupID = gm.GroupID
 WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 ```
 
-### Bonus: Direct Messaging & Notifications
-- Send direct messages
-- Real-time notifications
-- Activity logging
+### 6. Direct Messaging
+- Private message exchange between users
+- Read/unread status tracking
+- Message history management
+
+### 7. Notification System
+- Event-based notifications (likes, comments, follows, mentions)
+- Read status management
+- Activity logging for security and analytics
 
 ---
 
-## Assignment Requirements Compliance
-
-### Module A Requirements:
-
-| Requirement | Status | Details |
-|-------------|--------|---------|
-| Member Table | ✅ | Complete with all required attributes |
-| 5+ Functionalities | ✅ | 5 core + 2 bonus functionalities |
-| 5+ Entities | ✅ | 12 entities implemented |
-| 10+ Tables | ✅ | 12 tables implemented |
-| Primary Keys | ✅ | All tables have PKs |
-| Foreign Keys | ✅ | Proper FK relationships with CASCADE/SET NULL and ON UPDATE CASCADE |
-| Functional Coverage | ✅ | All functionalities supported |
-| Real-life Data | ✅ | 15-20 rows per table with realistic data |
-| Referential Integrity | ✅ | CASCADE/SET NULL with ON UPDATE CASCADE |
-| 3+ NOT NULL per table | ✅ | All tables have 3+ NOT NULL columns |
-| Unique Row ID | ✅ | All tables have unique identifiers |
-| Logical Constraints | ✅ | No self-follow, read date logic, non-empty content, etc. |
-
 ## Installation & Usage
 
-### Prerequisites:
+### Prerequisites
 - MySQL 5.7+ or MariaDB 10.3+
-- MySQL Workbench (optional, for visualization)
+- MySQL Workbench (optional)
 
-### Setup Instructions:
+### Setup Instructions
 
-1. **Create Database**:
-```bash
-mysql -u root -p
-```
-
-2. **Import SQL Dump**:
-```sql
-source college_social_media_dump.sql
-```
-
-Or via command line:
+1. **Database Import**:
 ```bash
 mysql -u root -p < college_social_media_dump.sql
 ```
 
-3. **Verify Installation**:
+2. **Verification**:
 ```sql
 USE college_social_media;
 SHOW TABLES;
 
--- Check row counts
+-- Verify data population
 SELECT 'Member' as TableName, COUNT(*) as RowCount FROM Member
 UNION ALL
 SELECT 'Post', COUNT(*) FROM Post;
@@ -444,7 +215,7 @@ SELECT 'Post', COUNT(*) FROM Post;
 
 ## Sample Queries
 
-### Query 1: Get Most Active Users
+### Query 1: Most Active Users
 ```sql
 SELECT m.Name, m.Email,
        COUNT(DISTINCT p.PostID) AS PostCount,
@@ -459,7 +230,7 @@ ORDER BY (PostCount + CommentCount + LikeCount) DESC
 LIMIT 10;
 ```
 
-### Query 2: Get Popular Posts
+### Query 2: Popular Posts by Engagement
 ```sql
 SELECT p.PostID, m.Name AS Author, p.Content,
        p.LikeCount, p.CommentCount,
@@ -471,7 +242,7 @@ ORDER BY PopularityScore DESC
 LIMIT 10;
 ```
 
-### Query 3: Get Group Statistics
+### Query 3: Group Membership Statistics
 ```sql
 SELECT g.Name, g.Category, g.MemberCount,
        COUNT(DISTINCT gm.MemberID) AS ActualMemberCount,
@@ -483,9 +254,9 @@ GROUP BY g.GroupID
 ORDER BY g.MemberCount DESC;
 ```
 
-### Query 4: Get User's Social Network
+### Query 4: User Social Network Metrics
 ```sql
--- Get followers and following for a specific user
+-- Retrieve followers and following counts for a specific user
 SELECT
     (SELECT COUNT(*) FROM Follow WHERE FollowingID = 1) AS Followers,
     (SELECT COUNT(*) FROM Follow WHERE FollowerID = 1) AS Following,
@@ -493,7 +264,7 @@ SELECT
     (SELECT COUNT(*) FROM Comment WHERE MemberID = 1) AS Comments;
 ```
 
-### Query 5: Get Pending Moderation Reports
+### Query 5: Pending Moderation Reports
 ```sql
 SELECT r.ReportID, r.ReportedItemType, r.ReportedItemID,
        m1.Name AS Reporter, r.Reason, r.ReportDate
@@ -505,45 +276,41 @@ ORDER BY r.ReportDate ASC;
 
 ---
 
-## Security & Constraints
+## Database Constraints & Integrity
 
-### CHECK Constraints:
-- Email format: Must contain '@' and '.'
-- No self-following: FollowerID ≠ FollowingID
-- No self-messaging: SenderID ≠ ReceiverID
-- Positive counts: LikeCount, CommentCount ≥ 0
-- Content validation: Non-empty strings
+### CHECK Constraints
+- Email format validation (`LIKE '%@%.%'`)
+- Self-referential prevention (no self-follow, no self-message)
+- Non-negative counters (LikeCount, CommentCount ≥ 0)
+- Non-empty content validation
+- Chronological consistency (ReadDate ≥ SendDate, ReviewDate ≥ ReportDate)
 
-### UNIQUE Constraints:
+### UNIQUE Constraints
 - Member: Email, CollegeID
 - Follow: (FollowerID, FollowingID)
 - Like: (MemberID, TargetType, TargetID)
 - GroupMember: (GroupID, MemberID)
 
-### Referential Integrity:
-- CASCADE DELETE: When a member is deleted, dependent data is removed
-- SET NULL: When a reviewer is deleted, reports remain but reviewer is cleared
-- ON UPDATE CASCADE: Key updates propagate to dependent tables
+### Referential Integrity
+- ON DELETE CASCADE: Dependent records removed when parent is deleted
+- ON DELETE SET NULL: Foreign key set to NULL when referenced record is deleted (e.g., ReviewedBy in Report)
+- ON UPDATE CASCADE: Key changes propagate to dependent tables
 
 ---
 
 ## Performance Optimization
 
-### Indexes Created:
-- Member role filtering
-- Post member and date lookups
-- Comment lookups by post and member
-- Like target lookups
-- Follow relationship queries
-- Report status filtering
-- Message receiver inbox queries
-- Notification member lookups
-- Activity log member and timestamp ordering
-
----
-
-## License
-
-This project is created for academic purposes as part of CS 432 course assignment at IIT Gandhinagar.
-
----
+### Indexed Columns
+- `Member(Role)` - Role-based filtering
+- `Post(MemberID)` - User posts lookup
+- `Post(PostDate)` - Chronological ordering
+- `Comment(PostID)` - Post comments lookup
+- `Comment(MemberID)` - User comment activity
+- `Like(TargetType, TargetID)` - Target-based like retrieval
+- `Follow(FollowerID)` - Follower queries
+- `Follow(FollowingID)` - Following queries
+- `Report(Status)` - Status-based filtering
+- `Message(ReceiverID)` - Inbox queries
+- `Notification(MemberID)` - User notification retrieval
+- `ActivityLog(MemberID)` - User activity tracking
+- `ActivityLog(Timestamp)` - Temporal queries
