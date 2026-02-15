@@ -83,8 +83,8 @@ CREATE TABLE Follow (
     FollowDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (FollowerID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (FollowingID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE(FollowerID, FollowingID),
-    CONSTRAINT chk_no_self_follow CHECK (FollowerID != FollowingID)
+    UNIQUE(FollowerID, FollowingID)
+    -- Note: Self-follow prevention enforced by trigger trg_follow_no_self_follow_insert/update
 );
 
 -- ============================================================================
@@ -157,10 +157,7 @@ CREATE TABLE Report (
     FOREIGN KEY (ReporterID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ReviewedBy) REFERENCES Member(MemberID) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_reason_not_empty CHECK (CHAR_LENGTH(TRIM(Reason)) > 0),
-    CONSTRAINT chk_review_logic CHECK (
-        (Status = 'Pending' AND ReviewedBy IS NULL) OR
-        (Status != 'Pending' AND ReviewedBy IS NOT NULL)
-    ),
+    -- Note: Review logic enforced by trigger trg_report_review_logic_insert/update
     CONSTRAINT chk_report_chronology CHECK (ReviewDate IS NULL OR ReviewDate >= ReportDate)
 );
 
@@ -213,7 +210,7 @@ CREATE TABLE Message (
     FOREIGN KEY (SenderID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (ReceiverID) REFERENCES Member(MemberID) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_message_not_empty CHECK (CHAR_LENGTH(TRIM(Content)) > 0),
-    CONSTRAINT chk_no_self_message CHECK (SenderID != ReceiverID),
+    -- Note: Self-message prevention enforced by trigger trg_message_no_self_message_insert/update
     CONSTRAINT chk_read_date_logic CHECK (
         (IsRead = FALSE AND ReadDate IS NULL) OR
         (IsRead = TRUE AND ReadDate IS NOT NULL)
@@ -273,6 +270,98 @@ CREATE INDEX idx_message_receiver ON Message(ReceiverID);
 CREATE INDEX idx_notification_member ON Notification(MemberID);
 CREATE INDEX idx_activitylog_member ON ActivityLog(MemberID);
 CREATE INDEX idx_activitylog_timestamp ON ActivityLog(`Timestamp` DESC);
+
+-- ============================================================================
+-- TRIGGERS for Business Rule Enforcement
+-- Note: These triggers replace CHECK constraints that conflict with foreign key
+--       CASCADE actions (MySQL Error 3823)
+-- ============================================================================
+
+-- Trigger 1: Prevent self-follow on INSERT
+DELIMITER //
+CREATE TRIGGER trg_follow_no_self_follow_insert
+BEFORE INSERT ON Follow
+FOR EACH ROW
+BEGIN
+    IF NEW.FollowerID = NEW.FollowingID THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A user cannot follow themselves';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger 2: Prevent self-follow on UPDATE
+DELIMITER //
+CREATE TRIGGER trg_follow_no_self_follow_update
+BEFORE UPDATE ON Follow
+FOR EACH ROW
+BEGIN
+    IF NEW.FollowerID = NEW.FollowingID THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A user cannot follow themselves';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger 3: Prevent self-message on INSERT
+DELIMITER //
+CREATE TRIGGER trg_message_no_self_message_insert
+BEFORE INSERT ON Message
+FOR EACH ROW
+BEGIN
+    IF NEW.SenderID = NEW.ReceiverID THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A user cannot send a message to themselves';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger 4: Prevent self-message on UPDATE
+DELIMITER //
+CREATE TRIGGER trg_message_no_self_message_update
+BEFORE UPDATE ON Message
+FOR EACH ROW
+BEGIN
+    IF NEW.SenderID = NEW.ReceiverID THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A user cannot send a message to themselves';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger 5: Enforce report review logic on INSERT
+DELIMITER //
+CREATE TRIGGER trg_report_review_logic_insert
+BEFORE INSERT ON Report
+FOR EACH ROW
+BEGIN
+    IF (NEW.Status = 'Pending' AND NEW.ReviewedBy IS NOT NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Pending reports cannot have a reviewer assigned';
+    END IF;
+    IF (NEW.Status != 'Pending' AND NEW.ReviewedBy IS NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Non-pending reports must have a reviewer assigned';
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger 6: Enforce report review logic on UPDATE
+DELIMITER //
+CREATE TRIGGER trg_report_review_logic_update
+BEFORE UPDATE ON Report
+FOR EACH ROW
+BEGIN
+    IF (NEW.Status = 'Pending' AND NEW.ReviewedBy IS NOT NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Pending reports cannot have a reviewer assigned';
+    END IF;
+    IF (NEW.Status != 'Pending' AND NEW.ReviewedBy IS NULL) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Non-pending reports must have a reviewer assigned';
+    END IF;
+END//
+DELIMITER ;
 
 -- ============================================================================
 -- SAMPLE DATA INSERTION
