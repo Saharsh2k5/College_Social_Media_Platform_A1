@@ -21,12 +21,22 @@
 ## Project Structure
 
 ```
-Assignment1/
+College_Social_Media_Platform_A1/
 │
 ├── college_social_media_dump.sql    # Complete SQL dump (Module A)
 ├── schema.sql                        # Database schema only
 ├── sample_data.sql                   # Sample data only
-└── README.md                         # This file
+├── README.md                         # This file
+│
+├── ER_Diagrams/                      # Entity-Relationship Diagrams
+│   └── ER.png                        # Complete ER diagram
+│
+└── UML_Diagrams/                     # UML Design Diagrams
+    ├── like_and_comment.png          # Like and Comment system design
+    ├── login.png                     # Login flow diagram
+    ├── post.png                      # Post system design
+    ├── UML for maaps.png             # MAAPS UML diagram
+    └── use_case.png                  # Use case diagram
 ```
 
 ---
