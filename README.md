@@ -3,10 +3,11 @@
 ---
 
 ## Project Overview
- 
+
 **Objective**: Design and implement a relational database for a private social network enabling secure, verified communication and content sharing among college students and faculty.
 
 **Functional Scope**:
+
 - User verification through College ID
 - Content sharing (posts, comments, likes)
 - Social connections (follow/unfollow)
@@ -54,12 +55,14 @@ For detailed schema definitions, see [schema.sql](schema.sql).
 ## Core Functionalities
 
 ### 1. User Registration & Verification
+
 - Member registration with unique college ID
 - Profile verification system
 - Role-based access control (Student, Faculty, Staff, Admin)
 - Complete profile management
 
 **SQL Examples**:
+
 ```sql
 -- Register new member
 INSERT INTO Member (Name, Email, ContactNumber, CollegeID, Department)
@@ -73,12 +76,14 @@ SELECT * FROM Member WHERE IsVerified = TRUE;
 ```
 
 ### 2. Content Sharing & Engagement
+
 - Full CRUD operations on posts
 - Hierarchical commenting system
 - Like functionality for posts and comments
 - Media attachment support (images, videos, documents)
 
 **SQL Examples**:
+
 ```sql
 -- Create post
 INSERT INTO Post (MemberID, Content, MediaType, Visibility)
@@ -100,11 +105,13 @@ WHERE p.PostID = 1;
 ```
 
 ### 3. Social Connections
+
 - Bidirectional follow relationships
 - Follower and following lists
 - Connection analytics
 
 **SQL Examples**:
+
 ```sql
 -- Follow a user
 INSERT INTO Follow (FollowerID, FollowingID)
@@ -128,12 +135,14 @@ WHERE f.FollowingID = 2;
 ```
 
 ### 4. Content Moderation & Reporting
+
 - Report inappropriate content
 - Review and resolve reports
 - Track moderation actions
 - Admin review workflow
 
 **SQL Examples**:
+
 ```sql
 -- Report a post
 INSERT INTO Report (ReporterID, ReportedItemType, ReportedItemID, Reason)
@@ -153,12 +162,14 @@ WHERE r.Status = 'Pending';
 ```
 
 ### 5. Group Management
+
 - Campus group creation and management
 - Dynamic group membership
 - Hierarchical role system (Admin, Moderator, Member)
 - Categorical organization (Academic, Sports, Cultural, Tech, Other)
 
 **SQL Examples**:
+
 ```sql
 -- Create group
 INSERT INTO `Group` (Name, Description, CreatorID, Category)
@@ -176,11 +187,13 @@ WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 ```
 
 ### 6. Direct Messaging
+
 - Private message exchange between users
 - Read/unread status tracking
 - Message history management
 
 ### 7. Notification System
+
 - Event-based notifications (likes, comments, follows, mentions)
 - Read status management
 - Activity logging for security and analytics
@@ -190,17 +203,20 @@ WHERE gm.MemberID = 1 AND gm.IsActive = TRUE;
 ## Installation & Usage
 
 ### Prerequisites
+
 - MySQL 5.7+ or MariaDB 10.3+
 - MySQL Workbench (optional)
 
 ### Setup Instructions
 
 1. **Database Import**:
+
 ```bash
 mysql -u root -p < college_social_media_dump.sql
 ```
 
 2. **Verification**:
+
 ```sql
 USE college_social_media;
 SHOW TABLES;
@@ -216,21 +232,23 @@ SELECT 'Post', COUNT(*) FROM Post;
 ## Sample Queries
 
 ### Query 1: Most Active Users
+
 ```sql
 SELECT m.Name, m.Email,
        COUNT(DISTINCT p.PostID) AS PostCount,
        COUNT(DISTINCT c.CommentID) AS CommentCount,
-       COUNT(DISTINCT l.LikeID) AS LikeCount
+       COUNT(DISTINCT l.LikeID) AS LikeGivenCount
 FROM Member m
 LEFT JOIN Post p ON m.MemberID = p.MemberID
 LEFT JOIN Comment c ON m.MemberID = c.MemberID
 LEFT JOIN `Like` l ON m.MemberID = l.MemberID
 GROUP BY m.MemberID
-ORDER BY (PostCount + CommentCount + LikeCount) DESC
+ORDER BY (PostCount + CommentCount + LikeGivenCount) DESC
 LIMIT 10;
 ```
 
 ### Query 2: Popular Posts by Engagement
+
 ```sql
 SELECT p.PostID, m.Name AS Author, p.Content,
        p.LikeCount, p.CommentCount,
@@ -243,6 +261,7 @@ LIMIT 10;
 ```
 
 ### Query 3: Group Membership Statistics
+
 ```sql
 SELECT g.Name, g.Category, g.MemberCount,
        COUNT(DISTINCT gm.MemberID) AS ActualMemberCount,
@@ -255,6 +274,7 @@ ORDER BY g.MemberCount DESC;
 ```
 
 ### Query 4: User Social Network Metrics
+
 ```sql
 -- Retrieve followers and following counts for a specific user
 SELECT
@@ -265,6 +285,7 @@ SELECT
 ```
 
 ### Query 5: Pending Moderation Reports
+
 ```sql
 SELECT r.ReportID, r.ReportedItemType, r.ReportedItemID,
        m1.Name AS Reporter, r.Reason, r.ReportDate
@@ -279,19 +300,29 @@ ORDER BY r.ReportDate ASC;
 ## Database Constraints & Integrity
 
 ### CHECK Constraints
+
 - Email format validation (`LIKE '%@%.%'`)
-- Self-referential prevention (no self-follow, no self-message)
 - Non-negative counters (LikeCount, CommentCount ≥ 0)
 - Non-empty content validation
 - Chronological consistency (ReadDate ≥ SendDate, ReviewDate ≥ ReportDate)
 
+### TRIGGERS (Business Rules)
+
+The following business rules are enforced using triggers instead of CHECK constraints due to MySQL foreign key constraint limitations:
+
+- **Self-follow prevention**: Users cannot follow themselves
+- **Self-message prevention**: Users cannot send messages to themselves
+- **Report review logic**: Pending reports must not have a reviewer; non-pending reports must have a reviewer
+
 ### UNIQUE Constraints
+
 - Member: Email, CollegeID
 - Follow: (FollowerID, FollowingID)
 - Like: (MemberID, TargetType, TargetID)
 - GroupMember: (GroupID, MemberID)
 
 ### Referential Integrity
+
 - ON DELETE CASCADE: Dependent records removed when parent is deleted
 - ON DELETE SET NULL: Foreign key set to NULL when referenced record is deleted (e.g., ReviewedBy in Report)
 - ON UPDATE CASCADE: Key changes propagate to dependent tables
@@ -301,6 +332,7 @@ ORDER BY r.ReportDate ASC;
 ## Performance Optimization
 
 ### Indexed Columns
+
 - `Member(Role)` - Role-based filtering
 - `Post(MemberID)` - User posts lookup
 - `Post(PostDate)` - Chronological ordering
@@ -314,3 +346,16 @@ ORDER BY r.ReportDate ASC;
 - `Notification(MemberID)` - User notification retrieval
 - `ActivityLog(MemberID)` - User activity tracking
 - `ActivityLog(Timestamp)` - Temporal queries
+
+### Database Triggers
+
+Six triggers are implemented to enforce business rules that cannot be implemented as CHECK constraints in MySQL (due to foreign key CASCADE conflict):
+
+1. **trg_follow_no_self_follow_insert** - Prevents users from following themselves on INSERT
+2. **trg_follow_no_self_follow_update** - Prevents users from following themselves on UPDATE
+3. **trg_message_no_self_message_insert** - Prevents users from messaging themselves on INSERT
+4. **trg_message_no_self_message_update** - Prevents users from messaging themselves on UPDATE
+5. **trg_report_review_logic_insert** - Enforces report review logic on INSERT
+6. **trg_report_review_logic_update** - Enforces report review logic on UPDATE
+
+These triggers use `SIGNAL SQLSTATE '45000'` to raise custom errors when business rules are violated.
